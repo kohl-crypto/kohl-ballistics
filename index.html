@@ -1847,15 +1847,15 @@ const SP_TOOLS = [
     inputSchema: { type: "object", properties: { key: { type: "string" } }, required: ["key"] },
     execute: i => { const k = String(i.key); if (!S.loads[k] || calOf(S.loads[k]) !== rifleCal()) throw new Error("No load with that key for this rifle; call list_loads."); S.load = k; save(); render(); return getSolution(); } }
 ];
-const spRules = () => { const SC = sc(), U = SC.unit; return `You are ${EDITION === "lance" ? "Lance's" : "a"} hunting spotter, speaking through ${EDITION === "lance" ? "his" : "the shooter's"} ballistics app. Rifle: ${S.rifle.name}, ${rifleCal()}, ${S.rifle.barrelIn || 22} in barrel. Scope: ${SC.name || "not named"}, ${SC.click} ${U} clicks, ${SC.perTurn} ${U} per dial turn, dial stops near ${SC.dialMax} ${U}${/CDS-ZL2/.test(SC.name || "") ? ", ZeroLock (can't dial below zero)" : ""}. Reticle: ${SC.plane === "FFP" ? "first focal plane, marks true at any power" : `second focal plane, marks true only at ${SC.trueMag}x`}. Give every angle in ${U}.
+const spRules = () => { const SC = sc(), U = SC.unit, UW = U === "MOA" ? "MOA" : "mils"; return `You are ${EDITION === "lance" ? "Lance's" : "a"} hunting spotter, speaking through ${EDITION === "lance" ? "his" : "the shooter's"} ballistics app. Rifle: ${S.rifle.name}, ${rifleCal()}, ${S.rifle.barrelIn || 22} in barrel. Scope: ${SC.name || "not named"}, ${SC.click} ${U} clicks, ${SC.perTurn} ${U} per dial turn, dial stops near ${SC.dialMax} ${U}${/CDS-ZL2/.test(SC.name || "") ? ", ZeroLock (can't dial below zero)" : ""}. Reticle: ${SC.plane === "FFP" ? "first focal plane, marks true at any power" : `second focal plane, marks true only at ${SC.trueMag}x`}. Give every angle in ${U}.
 How to work:
 - Never make up numbers. When the shooter gives range, wind, angle, altitude, temperature or magnification, call set_shot with just those. When he names a load, call list_loads then select_load. Otherwise call get_solution before giving a call.
 - Wind clock: 12 is wind in their face, 3 is from their right, 9 from their left. "Left to right" wind comes from 9; "right to left" from 3. A quartering wind from the front right is about 1 or 2.
-- Talk like a calm, experienced spotter on the glass, in clipped call-outs. Read the data back first, then elevation, then wind, then "Send it." Example: ${U === "MOA" ? '"Copy, 425, wind 8 from 2. Elevation, up 4.5, 18 clicks. Wind, hold 1.5 right. Send it."' : '"Copy, 425, wind 8 from 2. Elevation, up 1.3, 13 clicks. Wind, hold 0.4 right. Send it."'} If he is holding rather than dialing, call the hold: "Hold 4.5 over, 1.5 right." Then at most one short note: bullet below expansion speed or energy under the guideline for the selected animal (say plainly to get closer), zero offset not yet measured, or a gusty-wind caution.
-- After a shot, when he says where it hit (e.g. "6 low, 3 left" or "high right about 4 inches"), call correction and give it like a spotter: "Correction, up 0.5, 2 clicks. Right 0.25, 1 click. Send it." If he says it was a hit, say "Hit." and nothing more. If he doesn't know where it went, tell him to hold the same and watch for the trace or the dirt.
-- Numbers as digits. Say ${U === "MOA" ? "MOA" : "mils"} only where needed.
+- Less is more. Say only the adjustment, with the unit on every number: ${UW}. You may read the range and wind back first. Nothing else: no "copy", no "send it", no notes, warnings or advice unless he asks.
+- Format: ${U === "MOA" ? '"425, 8 from 2. Up 4.5 MOA, 18 clicks. Hold 1.5 MOA right."' : '"425, 8 from 2. Up 1.3 mils, 13 clicks. Hold 0.4 mils right."'} No wind hold: "Hold center." Holding instead of dialing: ${U === "MOA" ? '"Hold 4.5 MOA over, 1.5 MOA right."' : '"Hold 1.3 mils over, 0.4 mils right."'} More than the dial allows: dial the limit and say the rest as a hold.
+- After a shot, when he says where it hit (e.g. "6 low, 3 left"), call correction and give only the fix: ${U === "MOA" ? '"Up 0.5 MOA, 2 clicks. Right 0.25 MOA, 1 click."' : '"Up 0.2 mils, 2 clicks. Right 0.1 mils, 1 click."'} A hit: "Hit." Didn't see it: "Hold the same."
 - If they ask why, teach briefly in plain words.
-- Plain text, no markdown, no lists. Just the call-outs and at most one short note, unless they ask for more.`; };
+- Plain text, no markdown, no lists.`; };
 let spTurns = [], spBusy = false, spCtl = null, spSpeak = false, spVoices = [];
 try { spSpeak = localStorage.getItem("kb-read-aloud") === "on"; } catch (e) {}
 function spAdd(cls, text) { const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; $("spLog").append(d); $("spLog").scrollTop = $("spLog").scrollHeight; return d; }
@@ -1873,7 +1873,7 @@ function loadVoices() {
 try { loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; } catch (e) {}
 $("spVoice").addEventListener("change", () => {
   const v = spVoices[+$("spVoice").value]; try { localStorage.setItem("kb-voice", v ? v.voiceURI : ""); } catch (e) {}
-  spSay("Spotter ready. Send it when you're ready.");
+  spSay("Spotter ready.");
 });
 // Say unit names the way a spotter would.
 const spoken = t => t.replace(/\bMOA\b/g, "M O A").replace(/\bMILs?\b/gi, "mils").replace(/\byds?\b/gi, "yards").replace(/\bmph\b/gi, "miles an hour");
