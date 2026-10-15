@@ -291,6 +291,7 @@ details.lesson p{margin:.6em 0;max-width:65ch}
     </div>
     <div class="splog" id="spLog" aria-live="polite"></div>
     <button class="btn spmic" id="spMic" type="button" aria-pressed="false" hidden>Talk</button>
+    <label class="field" id="spVoiceF" hidden><span class="lbl">Spotter's voice</span><select id="spVoice"></select></label>
     <form class="spform" id="spForm">
       <input type="text" id="spIn" autocomplete="off" enterkeyhint="send" placeholder="e.g. 425 yards, wind 8 from 2 o'clock, 10 down" aria-label="Talk to your spotter">
       <button class="btn primary" id="spSend" type="submit">Send</button>
@@ -1831,6 +1832,15 @@ const SP_TOOLS = [
       if (i.animal && SPECIES[i.animal]) S.species = i.animal;
       save(); render(); return getSolution();
     } },
+  { name: "correction", description: "Turn where the last shot hit into a scope correction at the current range (or rangeYd). verticalIn: inches the impact was above (+) or below (-) the point of aim. horizontalIn: inches right (+) or left (-) of aim. Returns the direction, amount and clicks to adjust.",
+    inputSchema: { type: "object", properties: { verticalIn: { type: "number" }, horizontalIn: { type: "number" }, rangeYd: { type: "number" } } },
+    execute: i => {
+      const SC = sc(), r = i.rangeYd != null && isFinite(i.rangeYd) ? Math.round(clampN(i.rangeYd, 25, 1000)) : S.range, per = unitIn(r);
+      const one = (inches, pos, neg) => { const amt = -(Number(inches) || 0) / per, clicks = Math.round(Math.abs(amt) / SC.click);
+        return clicks ? { direction: amt > 0 ? pos : neg, clicks, amount: +(clicks * SC.click).toFixed(SC.unit === "MOA" ? 2 : 1) } : { direction: "none", clicks: 0, amount: 0 }; };
+      return { rangeYd: r, units: SC.unit, clickValue: SC.click, elevation: one(i.verticalIn, "up", "down"), windage: one(i.horizontalIn, "right", "left"),
+        rule: "Move the impact to the aim point: hit low means come up, hit left means go right. Dial it, or hold the same amount the other way in the reticle." };
+    } },
   { name: "list_loads", description: "Lists the loads saved in the app, with which one is selected and which one the rifle is zeroed with.",
     execute: () => myLoads().map(([k, l]) => ({ key: k, name: l.name, selected: k === S.load, zeroLoad: k === S.zeroLoad })) },
   { name: "select_load", description: "Select a saved load by its key from list_loads, then return the new firing solution.",
@@ -1841,14 +1851,40 @@ const spRules = () => { const SC = sc(), U = SC.unit; return `You are ${EDITION 
 How to work:
 - Never make up numbers. When the shooter gives range, wind, angle, altitude, temperature or magnification, call set_shot with just those. When he names a load, call list_loads then select_load. Otherwise call get_solution before giving a call.
 - Wind clock: 12 is wind in their face, 3 is from their right, 9 from their left. "Left to right" wind comes from 9; "right to left" from 3. A quartering wind from the front right is about 1 or 2.
-- Talk like a calm, experienced spotter: numbers first, short. Example: ${U === "MOA" ? '"Dial 4.5 up, 18 clicks. Hold 1.5 right for wind."' : '"Dial 1.3 up, 13 clicks. Hold 0.4 right for wind."'} Then at most one short note: bullet below expansion speed or energy under the guideline for the selected animal (say plainly to get closer), zero offset not yet measured, or a gusty-wind caution.
+- Talk like a calm, experienced spotter on the glass, in clipped call-outs. Read the data back first, then elevation, then wind, then "Send it." Example: ${U === "MOA" ? '"Copy, 425, wind 8 from 2. Elevation, up 4.5, 18 clicks. Wind, hold 1.5 right. Send it."' : '"Copy, 425, wind 8 from 2. Elevation, up 1.3, 13 clicks. Wind, hold 0.4 right. Send it."'} If he is holding rather than dialing, call the hold: "Hold 4.5 over, 1.5 right." Then at most one short note: bullet below expansion speed or energy under the guideline for the selected animal (say plainly to get closer), zero offset not yet measured, or a gusty-wind caution.
+- After a shot, when he says where it hit (e.g. "6 low, 3 left" or "high right about 4 inches"), call correction and give it like a spotter: "Correction, up 0.5, 2 clicks. Right 0.25, 1 click. Send it." If he says it was a hit, say "Hit." and nothing more. If he doesn't know where it went, tell him to hold the same and watch for the trace or the dirt.
+- Numbers as digits. Say ${U === "MOA" ? "MOA" : "mils"} only where needed.
 - If they ask why, teach briefly in plain words.
-- Plain text, no markdown, no lists. Under 3 sentences unless they ask for more.`; };
-let spTurns = [], spBusy = false, spCtl = null, spSpeak = false;
+- Plain text, no markdown, no lists. Just the call-outs and at most one short note, unless they ask for more.`; };
+let spTurns = [], spBusy = false, spCtl = null, spSpeak = false, spVoices = [];
+try { spSpeak = localStorage.getItem("kb-read-aloud") === "on"; } catch (e) {}
 function spAdd(cls, text) { const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; $("spLog").append(d); $("spLog").scrollTop = $("spLog").scrollHeight; return d; }
+// Read aloud: a British male voice if the phone has one, a little slower than normal. The choice is remembered.
+const ukMale = v => /^en[-_]GB/i.test(v.lang) && !/female/i.test(v.name) && /\bmale\b|daniel|arthur|george|ryan|oliver|thomas|harry|alfie|brian|malcolm/i.test(v.name);
+function loadVoices() {
+  try { spVoices = window.speechSynthesis.getVoices().filter(v => /^en/i.test(v.lang)); } catch (e) { spVoices = []; }
+  const rank = v => ukMale(v) ? 0 : /^en[-_]GB/i.test(v.lang) ? 1 : 2;
+  spVoices.sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+  let saved = ""; try { saved = localStorage.getItem("kb-voice") || ""; } catch (e) {}
+  $("spVoice").innerHTML = spVoices.map((v, i) => `<option value="${i}">${String(v.name).replace(/</g, "&lt;")} (${v.lang})${ukMale(v) ? ", British male" : ""}</option>`).join("");
+  $("spVoice").value = String(Math.max(0, spVoices.findIndex(v => v.voiceURI === saved)));
+  $("spVoiceF").hidden = !spSpeak || !spVoices.length;
+}
+try { loadVoices(); window.speechSynthesis.onvoiceschanged = loadVoices; } catch (e) {}
+$("spVoice").addEventListener("change", () => {
+  const v = spVoices[+$("spVoice").value]; try { localStorage.setItem("kb-voice", v ? v.voiceURI : ""); } catch (e) {}
+  spSay("Spotter ready. Send it when you're ready.");
+});
+// Say unit names the way a spotter would.
+const spoken = t => t.replace(/\bMOA\b/g, "M O A").replace(/\bMILs?\b/gi, "mils").replace(/\byds?\b/gi, "yards").replace(/\bmph\b/gi, "miles an hour");
 function spSay(text) {
   if (!spSpeak) return;
-  try { const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch (e) { $("spNote").textContent = "Read aloud isn't available on this device."; }
+  try {
+    const u = new SpeechSynthesisUtterance(spoken(text)), v = spVoices[+$("spVoice").value];
+    if (v) { u.voice = v; u.lang = v.lang; } else u.lang = "en-GB";
+    u.rate = 0.9;
+    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u);
+  } catch (e) { $("spNote").textContent = "Read aloud isn't available on this device."; }
 }
 $("spBtn").onclick = () => {
   const box = $("spotter"), open = box.hidden;
@@ -1860,7 +1896,13 @@ $("spBtn").onclick = () => {
   }
 };
 $("spClose").onclick = () => { $("spotter").hidden = true; $("spBtn").setAttribute("aria-expanded", "false"); try { spRec && spRec.abort(); spCtl && spCtl.abort(); window.speechSynthesis.cancel(); } catch (e) {} };
-$("spSpeak").onclick = () => { spSpeak = !spSpeak; $("spSpeak").setAttribute("aria-pressed", spSpeak); if (!spSpeak) try { window.speechSynthesis.cancel(); } catch (e) {} };
+$("spSpeak").setAttribute("aria-pressed", spSpeak);
+$("spSpeak").onclick = () => {
+  spSpeak = !spSpeak; $("spSpeak").setAttribute("aria-pressed", spSpeak);
+  try { localStorage.setItem("kb-read-aloud", spSpeak ? "on" : "off"); } catch (e) {}
+  if (!spSpeak) try { window.speechSynthesis.cancel(); } catch (e) {}
+  loadVoices();
+};
 $("spForm").addEventListener("submit", async e => {
   e.preventDefault();
   const text = $("spIn").value.trim(); if (!text || spBusy) return;
@@ -1873,10 +1915,10 @@ $("spForm").addEventListener("submit", async e => {
   spCtl = new AbortController();
   try {
     const { text: reply } = await SAMPLE([{ role: "user", content: spRules() }, ...spTurns], {
-      tools: SP_TOOLS, modelTier: "quick", signal: spCtl.signal,
-      onText: ({ text }) => { bubble.textContent = text; $("spLog").scrollTop = $("spLog").scrollHeight; }
+      tools: SP_TOOLS, modelTier: "quick", signal: spCtl.signal
     });
     const last = reply.split(/\n\s*\n/).pop().trim() || reply;
+    await new Promise(r => setTimeout(r, 500)); // a spotter's half-second beat before the call
     bubble.textContent = last; spTurns.push({ role: "assistant", content: last }); spSay(last);
   } catch (err) {
     const c = err && err.code;
