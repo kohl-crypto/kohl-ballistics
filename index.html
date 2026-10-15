@@ -94,11 +94,14 @@ img{max-width:100%}
     let text = "";
     for (let round = 0; round < 6; round++) {
       const body = { model, max_tokens: 1500, messages: msgs };
-      if (tools.length) body.tools = tools;
+      // opts.webSearch: let Claude search the web itself (Anthropic runs the search; billed to the same key).
+      const all = opts.webSearch ? [...tools, { type: "web_search_20250305", name: "web_search", max_uses: 3 }] : tools;
+      if (all.length) body.tools = all;
       const res = await call(body, opts.signal);
       const blocks = res.content || [];
       const t = blocks.filter(b => b.type === "text").map(b => b.text).join("");
       if (t.trim()) text = text ? text + "\n\n" + t : t;
+      if (res.stop_reason === "pause_turn") { msgs.push({ role: "assistant", content: blocks }); continue; } // long search: let it carry on
       const uses = blocks.filter(b => b.type === "tool_use");
       if (res.stop_reason !== "tool_use" || !uses.length) break;
       msgs.push({ role: "assistant", content: blocks });
@@ -502,6 +505,12 @@ details.lesson p{margin:.6em 0;max-width:65ch}
       <div class="chips" id="scPresets"></div>
       <div class="grid2">
         <label class="field" style="grid-column:1/-1"><span class="lbl">Scope make and model</span><input type="text" id="scName" autocomplete="off" placeholder="e.g. Vortex Diamondback 4-12x40"></label>
+        <div style="grid-column:1/-1" id="scFind">
+          <div class="chips" id="scMatches" hidden></div>
+          <div class="row" style="margin-top:6px"><button class="btn" type="button" id="scLook">Look up this scope's specs</button></div>
+          <p class="note" id="scLookNote" style="margin:6px 0 0" hidden></p>
+          <div class="chips" id="scVariants" hidden></div>
+        </div>
         <label class="field"><span class="lbl">Turret units</span><select id="scUnit"><option value="MOA">MOA</option><option value="MIL">MIL (MRAD)</option></select></label>
         <label class="field"><span class="lbl">Click value</span><select id="scClick"></select></label>
         <label class="field"><span class="lbl" id="scTurnLbl">Per turret turn</span><input type="number" id="scTurn" step="1"></label>
@@ -736,6 +745,60 @@ const SCOPE_PRESETS = [
   ["0.1 MIL, 1st focal plane", { unit: "MIL", click: 0.1, perTurn: 10, dialMax: 20, plane: "FFP", magMin: 4, magMax: 16, trueMag: 16 }],
   ["Leupold VX-5HD 3-15x44 CDS-ZL2", VX5]
 ];
+// Built-in scope list for "Look up" with no signal. Specs from each maker's own page or manual (src); null = not published.
+const SCOPE_DB = [
+{"name":"Leupold VX-3HD 3.5-10x40 CDS-ZL Duplex (1-inch)","aliases":["vx-3hd 3.5-10","vx3hd 3.5-10x40","vx-3hd 3.5-10x40 cds-zl"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":14.5,"travel":null,"plane":"SFP","magMin":3.5,"magMax":10,"trueMag":null,"reticleUnit":"none","src":"https://www.leupold.com/vx-3hd-3-5-10x40-cds-zl-duplex-riflescope"},
+{"name":"Leupold VX-3HD 4.5-14x40 CDS-ZL Duplex (1-inch)","aliases":["vx-3hd 4.5-14","vx3hd 4.5-14x40","vx-3hd 4.5-14x40 cds-zl"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":14.5,"travel":null,"plane":"SFP","magMin":4.5,"magMax":14,"trueMag":null,"reticleUnit":"none","src":"https://www.leupold.com/vx-3hd-4-5-14x40-cds-zl-duplex-riflescope"},
+{"name":"Leupold VX-5HD 3-15x44 CDS-ZL2 Side Focus Duplex","aliases":["vx-5hd 3-15","vx5hd 3-15x44","vx-5hd 3-15x44 duplex","vx-5hd cds-zl2"],"unit":"MOA","click":0.25,"perTurn":20,"dialMax":38,"travel":null,"plane":"SFP","magMin":3,"magMax":15,"trueMag":null,"reticleUnit":"none","src":"https://www.leupold.com/vx-5hd-3-15x44-cds-zl2-side-focus-duplex-riflescope"},
+{"name":"Leupold VX-5HD 3-15x44 CDS-ZL2 Side Focus Wind-Plex","aliases":["vx-5hd 3-15 wind-plex","vx5hd 3-15x44 windplex"],"unit":"MOA","click":0.25,"perTurn":20,"dialMax":38,"travel":null,"plane":"SFP","magMin":3,"magMax":15,"trueMag":15,"reticleUnit":"MOA","src":"https://www.leupold.com/vx-5hd-3-15x44-cds-zl2-side-focus-wind-plex-riflescope"},
+{"name":"Leupold VX-5HD Gen 2 3-15x44 CDS-SZL2 Side Focus Duplex","aliases":["vx-5hd gen 2 3-15","vx-5hd g2 3-15x44","vx5hd gen2"],"unit":"MOA","click":0.25,"perTurn":20,"dialMax":38,"travel":null,"plane":"SFP","magMin":3,"magMax":15,"trueMag":null,"reticleUnit":"none","src":"https://www.leupold.com/vx-5hd-gen-2-3-15x44-cds-szl2-side-focus-duplex"},
+{"name":"Leupold VX-5HD Gen 2 3-15x44 CDS-SZL2 Side Focus Wind-Plex","aliases":["vx-5hd gen 2 3-15 wind-plex"],"unit":"MOA","click":0.25,"perTurn":20,"dialMax":38,"travel":null,"plane":"SFP","magMin":3,"magMax":15,"trueMag":15,"reticleUnit":"MOA","src":"https://www.leupold.com/vx-5hd-gen-2-3-15x44-cds-szl2-side-focus-wind-plex"},
+{"name":"Leupold VX-Freedom 3-9x40 Duplex (capped)","aliases":["vx-freedom 3-9","vx freedom 3-9x40"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":60,"plane":"SFP","magMin":3,"magMax":9,"trueMag":null,"reticleUnit":"none","src":"https://www.leupold.com/vx-freedom-3-9x40-duplex-riflescope"},
+{"name":"Leupold VX-Freedom 4-12x40 CDS Duplex","aliases":["vx-freedom 4-12","vx freedom 4-12x40 cds"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":14,"travel":null,"plane":"SFP","magMin":4,"magMax":12,"trueMag":null,"reticleUnit":"none","src":"https://www.leupold.com/vx-freedom-4-12x40-cds-duplex-riflescope"},
+{"name":"Leupold VX-Freedom 4-12x40 CDS Tri-MOA","aliases":["vx-freedom 4-12 tri-moa","vx freedom 4-12x40 trimoa"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":14,"travel":null,"plane":"SFP","magMin":4,"magMax":12,"trueMag":12,"reticleUnit":"MOA","src":"https://www.leupold.com/vx-freedom-4-12x40-cds-tri-moa"},
+{"name":"Vortex Diamondback 3-9x40 (Dead-Hold BDC / V-Plex)","aliases":["diamondback 3-9","diamondback 3-9x40","dbk 3-9x40","vortex diamondback 3-9"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":70,"plane":"SFP","magMin":3,"magMax":9,"trueMag":9,"reticleUnit":"BDC","src":"https://vortexoptics.com/vortex-diamondback-3-9x40-riflescope.html"},
+{"name":"Vortex Diamondback 4-12x40 (Dead-Hold BDC / V-Plex)","aliases":["diamondback 4-12","diamondback 4-12x40","dbk 4-12x40","vortex diamondback 4-12"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":60,"plane":"SFP","magMin":4,"magMax":12,"trueMag":12,"reticleUnit":"BDC","src":"https://vortexoptics.com/diamondback-4-12x40-dead-hold-bdc-moa.html"},
+{"name":"Vortex Diamondback 4-12x40 AO (Dead-Hold BDC / V-Plex)","aliases":["diamondback 4-12 ao","diamondback 4-12x40 ao","dbk-412b","dbk-412pl"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":60,"plane":"SFP","magMin":4,"magMax":12,"trueMag":12,"reticleUnit":"BDC","src":"https://vortexoptics.com/diamondback-4-12x40-ao.html"},
+{"name":"Vortex Diamondback Tactical 4-16x44 FFP EBR-2C MOA","aliases":["diamondback tactical 4-16","dbt 4-16x44 moa","diamondback tactical 4-16x44 ffp moa"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":85,"plane":"FFP","magMin":4,"magMax":16,"trueMag":null,"reticleUnit":"MOA","src":"https://vortexoptics.com/vortex-diamondback-tactical-4-16x44-ffp-riflescope.html"},
+{"name":"Vortex Diamondback Tactical 4-16x44 FFP EBR-2C MRAD","aliases":["diamondback tactical 4-16 mrad","dbt 4-16x44 mil","diamondback tactical 4-16x44 ffp mrad"],"unit":"MIL","click":0.1,"perTurn":6,"dialMax":null,"travel":25,"plane":"FFP","magMin":4,"magMax":16,"trueMag":null,"reticleUnit":"MIL","src":"https://vortexoptics.com/vortex-diamondback-tactical-4-16x44-ffp-riflescope.html"},
+{"name":"Vortex Crossfire II 3-9x40 (Dead-Hold BDC / V-Plex / V-Brite)","aliases":["crossfire ii 3-9","crossfire 2 3-9x40","crossfire ii 3-9x40","cf2 3-9x40"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":60,"plane":"SFP","magMin":3,"magMax":9,"trueMag":9,"reticleUnit":"BDC","src":"https://vortexoptics.com/vortex-crossfire-ii-3-9x40-riflescope.html"},
+{"name":"Vortex Viper PST Gen II 5-25x50 FFP EBR-7C MOA","aliases":["pst gen 2 5-25 moa","viper pst gen ii 5-25x50 moa","pst 5-25 moa"],"unit":"MOA","click":0.25,"perTurn":25,"dialMax":null,"travel":70,"plane":"FFP","magMin":5,"magMax":25,"trueMag":null,"reticleUnit":"MOA","src":"https://vortexoptics.com/viper-pst-gen-2-5-25x50-ffp+reticle-EBR-7C~MRAD"},
+{"name":"Vortex Viper PST Gen II 5-25x50 FFP EBR-7C MRAD","aliases":["pst gen 2 5-25 mrad","viper pst gen ii 5-25x50 mil","pst 5-25 mrad"],"unit":"MIL","click":0.1,"perTurn":10,"dialMax":null,"travel":20,"plane":"FFP","magMin":5,"magMax":25,"trueMag":null,"reticleUnit":"MIL","src":"https://vortexoptics.com/viper-pst-gen-2-5-25x50-ffp+reticle-EBR-7C~MRAD"},
+{"name":"Vortex Venom 5-25x56 FFP EBR-7C MOA","aliases":["venom 5-25 moa","venom 5-25x56 moa"],"unit":"MOA","click":0.25,"perTurn":25,"dialMax":null,"travel":85,"plane":"FFP","magMin":5,"magMax":25,"trueMag":null,"reticleUnit":"MOA","src":"https://vortexoptics.com/venom-5-25x56-ffp-riflescope.html"},
+{"name":"Vortex Venom 5-25x56 FFP EBR-7C MRAD","aliases":["venom 5-25 mrad","venom 5-25x56 mil"],"unit":"MIL","click":0.1,"perTurn":10,"dialMax":null,"travel":25,"plane":"FFP","magMin":5,"magMax":25,"trueMag":null,"reticleUnit":"MIL","src":"https://vortexoptics.com/venom-5-25x56-ffp-riflescope.html"},
+{"name":"Vortex Strike Eagle 5-25x56 FFP EBR-7C MOA","aliases":["strike eagle 5-25 moa","strike eagle 5-25x56 moa"],"unit":"MOA","click":0.25,"perTurn":25,"dialMax":null,"travel":110,"plane":"FFP","magMin":5,"magMax":25,"trueMag":null,"reticleUnit":"MOA","src":"https://vortexoptics.com/vortex-strike-eagle-5-25x56-ffp.html"},
+{"name":"Vortex Strike Eagle 5-25x56 FFP EBR-7C MRAD","aliases":["strike eagle 5-25 mrad","strike eagle 5-25x56 mil"],"unit":"MIL","click":0.1,"perTurn":10,"dialMax":null,"travel":31,"plane":"FFP","magMin":5,"magMax":25,"trueMag":null,"reticleUnit":"MIL","src":"https://vortexoptics.com/vortex-strike-eagle-5-25x56-ffp.html"},
+{"name":"Burris Fullfield IV 3-12x42 Long-Range MOA","aliases":["fullfield iv 3-12","fullfield 4 3-12x42","ffiv 3-12 lr moa"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":70,"plane":"SFP","magMin":3,"magMax":12,"trueMag":null,"reticleUnit":"MOA","src":"https://www.burrisoptics.com/riflescopes/fullfield-iv-3-12x42mm"},
+{"name":"Burris Fullfield IV 3-12x42 C4 Wind MOA Illuminated","aliases":["fullfield iv 3-12 c4","fullfield 4 3-12x42 c4 wind"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":70,"plane":"SFP","magMin":3,"magMax":12,"trueMag":null,"reticleUnit":"MOA","src":"https://www.burrisoptics.com/riflescopes/fullfield-iv-3-12x42mm"},
+{"name":"Burris Fullfield IV 3-12x42 Ballistic E3","aliases":["fullfield iv 3-12 e3","fullfield 4 3-12x42 ballistic e3"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":70,"plane":"SFP","magMin":3,"magMax":12,"trueMag":null,"reticleUnit":"BDC","src":"https://www.burrisoptics.com/riflescopes/fullfield-iv-3-12x42mm"},
+{"name":"Burris Fullfield E1 3-9x40 Ballistic Plex","aliases":["fullfield e1 3-9","fullfield e1 3-9x40","burris e1 3-9"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":50,"plane":"SFP","magMin":3,"magMax":9,"trueMag":null,"reticleUnit":"BDC","src":"https://www.burrisoptics.com/riflescopes/fullfield-e1-riflescope-3-9x40mm"},
+{"name":"Burris Signature HD 5-25x50 Ballistic E3 Illuminated (SFP)","aliases":["signature hd 5-25","signature hd 5-25x50 e3"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":65,"plane":"SFP","magMin":5,"magMax":25,"trueMag":25,"reticleUnit":"BDC","src":"https://www.burrisoptics.com/riflescopes/signature-hd-5-25x50mm"},
+{"name":"Burris Signature HD 5-25x50 Fine Plex (SFP)","aliases":["signature hd 5-25 fine plex"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":65,"plane":"SFP","magMin":5,"magMax":25,"trueMag":25,"reticleUnit":"none","src":"https://www.burrisoptics.com/riflescopes/signature-hd-5-25x50mm"},
+{"name":"Burris Signature HD 5-25x50 6.5 Creedmoor (FFP)","aliases":["signature hd 5-25 6.5 creedmoor","signature hd 5-25 ffp"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":65,"plane":"FFP","magMin":5,"magMax":25,"trueMag":null,"reticleUnit":"BDC","src":"https://www.burrisoptics.com/riflescopes/signature-hd-5-25x50mm"},
+{"name":"Bushnell Engage 4-16x44 Deploy MOA","aliases":["engage 4-16","engage 4-16x44"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":50,"plane":"SFP","magMin":4,"magMax":16,"trueMag":16,"reticleUnit":"MOA","src":"https://cdn.shopify.com/s/files/1/0947/2796/2920/files/EngageRiflescopes_ExpTurtDG_1LIM_web.pdf","srcKind":"retailer"},
+{"name":"Bushnell Banner 3-9x40 Multi-X","aliases":["banner 3-9","banner 3-9x40"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":60,"plane":"SFP","magMin":3,"magMax":9,"trueMag":null,"reticleUnit":"none","src":"https://www.bushnell.com/scopes/view-all-riflescopes/banner-3-9x40-riflescope/BU-613947.html","srcKind":"retailer"},
+{"name":"Bushnell Banner 2 3-9x40 DOA QBR","aliases":["banner 2 3-9","banner ii 3-9x40"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":null,"plane":"SFP","magMin":3,"magMax":9,"trueMag":9,"reticleUnit":"BDC","src":"https://cdn.shopify.com/s/files/1/0947/2796/2920/files/Banner2Riflescopes_FullManual_1LIMv3_rev092320_web.pdf"},
+{"name":"Trijicon AccuPoint 3-9x40 Duplex","aliases":["accupoint 3-9","accupoint 3-9x40","tr20"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":50,"plane":"SFP","magMin":3,"magMax":9,"trueMag":null,"reticleUnit":"none","src":"https://www.trijicon.com/products/details/tr20-1"},
+{"name":"Maven RS.1 2.5-15x44 FFP MOA","aliases":["rs.1","rs1 2.5-15","maven rs1"],"unit":"MOA","click":0.25,"perTurn":20,"dialMax":null,"travel":100,"plane":"FFP","magMin":2.5,"magMax":15,"trueMag":null,"reticleUnit":"MOA","src":"https://mavenbuilt.com/pages/rs-1-2-5-15x44-ffp-specifications"},
+{"name":"Maven CRS.2 4-16x44 SFP CSHR-W","aliases":["crs.2","crs2 4-16","maven crs2"],"unit":"MOA","click":0.25,"perTurn":18,"dialMax":null,"travel":45,"plane":"SFP","magMin":4,"magMax":16,"trueMag":10,"reticleUnit":"MOA","src":"https://mavenbuilt.com/products/crs-2-4-16x44-sfp"},
+{"name":"Zeiss Conquest V4 4-16x44 ZBi #68 External Elevation Turret (Ballistic Stop)","aliases":["conquest v4 4-16","v4 4-16x44","zeiss v4 zbi","conquest v4 4-16 zbi"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":80,"plane":"SFP","magMin":4,"magMax":16,"trueMag":16,"reticleUnit":"MOA","src":"https://sportsoptics-shop.zeiss.com/conquest-v4-4-16x44-riflescope-with-zbi-illuminated-reticle-68-external-elevation-turret-ballistic-stop-adjustable-parallax-25-moa/"},
+{"name":"Zeiss Conquest V4 4-16x44 ZBi #68 Capped Elevation Turret","aliases":["conquest v4 4-16 capped","v4 4-16x44 zbi capped"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":80,"plane":"SFP","magMin":4,"magMax":16,"trueMag":16,"reticleUnit":"MOA","src":"https://sportsoptics-shop.zeiss.com/conquest-v4-4-16x44-riflescope-with-zbi-illuminated-reticle-68-capped-elevation-turret-adjustable-parallax-25-moa/"},
+{"name":"Zeiss Conquest V4 3-12x56 Capped (Z-Plex #20 / Illuminated Plex #60)","aliases":["conquest v4 3-12x56","v4 3-12x56","zeiss v4 3-12"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":70,"plane":"SFP","magMin":3,"magMax":12,"trueMag":12,"reticleUnit":"none","src":"https://sportsoptics-shop.zeiss.com/conquest-v4-3-12x56-riflescope-with-z-plex-reticle-20-capped-elevation-turret-fixed-parallax-25-moa/"},
+{"name":"Swarovski Z3 3-10x42 (BRX or 4A, capped)","aliases":["z3 3-10x42","swaro z3 3-10","swarovski z3"],"unit":"MOA","click":0.24,"perTurn":null,"dialMax":null,"travel":47.7,"plane":"SFP","magMin":3.3,"magMax":10,"trueMag":null,"reticleUnit":"BDC","src":"https://www.swarovskioptik.com/int/en/hunting/products/rifle-scopes/z3/z3-3-10x42/z3-3-10x42"},
+{"name":"Swarovski Z5 3.5-18x44 P (capped)","aliases":["z5 3.5-18x44","swaro z5 3.5-18","swarovski z5"],"unit":"MOA","click":0.24,"perTurn":null,"dialMax":null,"travel":55.4,"plane":"SFP","magMin":3.5,"magMax":18,"trueMag":null,"reticleUnit":"none","src":"https://www.swarovskioptik.com/us/en/hunting/products/rifle-scopes/z5-i/z5-i-3-5-18x44/z5-3p5-18x44-p"},
+{"name":"Swarovski Z5 3.5-18x44 P BT (ballistic turret)","aliases":["z5 3.5-18x44 bt","z5 bt","swarovski z5 bt"],"unit":"MOA","click":0.24,"perTurn":null,"dialMax":null,"travel":55.4,"plane":"SFP","magMin":3.5,"magMax":18,"trueMag":null,"reticleUnit":"none","src":"https://www.swarovskioptik.com/int/en/hunting/products/rifle-scopes/z5-i/z5-i-3-5-18x44/z5-3p5-18x44-p-bt"},
+{"name":"Sig Sauer Whiskey3 3-9x40 (Quadplex / BDC-1, capped)","aliases":["whiskey3 3-9x40","whiskey 3 3-9","sig whiskey3"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":90,"plane":"SFP","magMin":3,"magMax":9,"trueMag":null,"reticleUnit":"none","src":"https://www.optics-trade.eu/us/sig-sauer-whiskey3-3-9x40.html","srcKind":"retailer"},
+{"name":"Sig Sauer Whiskey5 3-15x44 MOA (HellFire Quadplex)","aliases":["whiskey5 3-15x44","whiskey 5 3-15","sig whiskey5 moa"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":70,"plane":"SFP","magMin":3,"magMax":15,"trueMag":null,"reticleUnit":"none","src":"https://www.opticsplanet.com/v/sow53011-sig-sauer-whiskey5-riflescope.html","srcKind":"retailer"},
+{"name":"Sig Sauer Whiskey5 3-15x44 MRAD (MRAD Milling Hunter)","aliases":["whiskey5 3-15x44 mrad","whiskey 5 mil","sig whiskey5 mrad"],"unit":"MIL","click":0.1,"perTurn":10,"dialMax":null,"travel":20,"plane":"SFP","magMin":3,"magMax":15,"trueMag":null,"reticleUnit":"MIL","src":"https://www.bhphotovideo.com/c/product/1476506-REG/sig_sauer_sow53017_3_15x44_whiskey5_riflescope_illuminated.html","srcKind":"retailer"},
+{"name":"Sig Sauer Tango4 6-24x50 FFP MOA","aliases":["tango4 6-24x50","tango 4 6-24","sig tango4 moa"],"unit":"MOA","click":0.25,"perTurn":25,"dialMax":null,"travel":52,"plane":"FFP","magMin":6,"magMax":24,"trueMag":null,"reticleUnit":"MOA","src":"https://www.sigsauer.com/media/sigsauer/resources/19SIG2958-TANGO4-7400252-01-R02-HR.pdf"},
+{"name":"Sig Sauer Tango4 6-24x50 FFP MRAD","aliases":["tango4 6-24x50 mrad","tango 4 mil","sig tango4 mrad"],"unit":"MIL","click":0.1,"perTurn":10,"dialMax":null,"travel":15,"plane":"FFP","magMin":6,"magMax":24,"trueMag":null,"reticleUnit":"MIL","src":"https://www.sigsauer.com/media/sigsauer/resources/19SIG2958-TANGO4-7400252-01-R02-HR.pdf"},
+{"name":"Athlon Argos BTR Gen2 6-24x50 FFP APLR2 IR MOA","aliases":["argos btr gen2 6-24 moa","argos btr 6-24x50 moa","argos 6-24 aplr2"],"unit":"MOA","click":0.25,"perTurn":15,"dialMax":null,"travel":60,"plane":"FFP","magMin":6,"magMax":24,"trueMag":null,"reticleUnit":"MOA","src":"https://athlonoptics.com/product/argos-btr-gen2-6-24x50-aplr2-ffp-ir-moa/"},
+{"name":"Athlon Argos BTR Gen2 6-24x50 FFP APMR IR MIL","aliases":["argos btr gen2 6-24 mil","argos btr 6-24x50 mil","argos btr mrad"],"unit":"MIL","click":0.1,"perTurn":6,"dialMax":null,"travel":18,"plane":"FFP","magMin":6,"magMax":24,"trueMag":null,"reticleUnit":"MIL","src":"https://athlonoptics.com/product/argos-btr-gen2-6-24x50-apmr-ffp-ir-mil/"},
+{"name":"Athlon Ares ETR 4.5-30x56 FFP MOA (APLR12 Gen2 / APLR2 Gen1)","aliases":["ares etr 4.5-30 moa","ares etr moa","ares etr gen2 moa"],"unit":"MOA","click":0.25,"perTurn":25,"dialMax":null,"travel":110,"plane":"FFP","magMin":4.5,"magMax":30,"trueMag":null,"reticleUnit":"MOA","src":"https://athlonoptics.com/product/ares-etr-gen2-uhd-4-5-30x56-aplr12-ffp-ir-moa/"},
+{"name":"Athlon Ares ETR 4.5-30x56 FFP MIL (APRS12 Gen2 / APRS1 Gen1)","aliases":["ares etr 4.5-30 mil","ares etr mil","ares etr mrad"],"unit":"MIL","click":0.1,"perTurn":10,"dialMax":null,"travel":32,"plane":"FFP","magMin":4.5,"magMax":30,"trueMag":null,"reticleUnit":"MIL","src":"https://athlonoptics.com/product/ares-etr-gen2-uhd-4-5-30x56-aprs12-ffp-ir-mil"},
+{"name":"Nightforce SHV 4-14x50 F1 MOA (MOAR F1)","aliases":["shv 4-14x50","shv 4-14 f1 moa","nightforce shv 4-14 moar"],"unit":"MOA","click":0.25,"perTurn":null,"dialMax":null,"travel":90,"plane":"FFP","magMin":4,"magMax":14,"trueMag":null,"reticleUnit":"MOA","src":"https://nightforceoptics.com/shv/4-14x50-f1"},
+{"name":"Nightforce SHV 4-14x50 F1 MRAD (MIL-R F1 / MIL-XT)","aliases":["shv 4-14x50 mil","shv 4-14 f1 mil","shv 4-14 mrad"],"unit":"MIL","click":0.1,"perTurn":null,"dialMax":null,"travel":26,"plane":"FFP","magMin":4,"magMax":14,"trueMag":null,"reticleUnit":"MIL","src":"https://nightforceoptics.com/shv/4-14x50-f1"}
+];
 const DEFAULTS_FRIENDS = {
   version: 3, needsSetup: true,
   load: null, loads: {},
@@ -892,6 +955,7 @@ function switchRifle(id, noSync) {
   S.rifle = rest; S.rifleId = id;
   S.zeroEnv = zeroEnv || { altFt: 6035, tempF: 60, rh: 30, pressure: 0 };
   S.zeroLoad = zeroLoad; S.load = ld;
+  ["scMatches", "scVariants", "scLookNote"].forEach(i => $(i).hidden = true);
   ensureLoad(); save(); render();
 }
 const load = () => S.loads[S.load];
@@ -1028,11 +1092,136 @@ $("scPresets").querySelectorAll(".chip").forEach(c => c.onclick = () => {
   S.mag = Math.min(S.mag, S.rifle.scope.magMax); save(); render();
   $("rifNote").textContent = `Scope set to ${n}. Check the numbers against your scope and change any that differ.`;
 });
+
+// ---------- scope lookup: built-in list as you type, Claude online for anything else ----------
+const scNorm = s => String(s || "").toLowerCase().replace(/[^a-z0-9.]+/g, " ").trim();
+function scopeMatches(q) {
+  const words = scNorm(q).split(" ").filter(Boolean);
+  if (!words.some(w => /[a-z]/.test(w)) || words.join("").length < 2) return [];
+  // Every brand/model word must match; numbers (power, objective) narrow it down to the closest.
+  const found = SCOPE_DB.map(s => {
+    const hay = " " + scNorm([s.name, ...(s.aliases || [])].join(" ")) + " ";
+    const has = w => /[a-z]/.test(w) ? hay.includes(w) : hay.includes(" " + w) || hay.includes(w + "x");
+    return { s, all: words.filter(w => /[a-z]/.test(w)).every(has), hits: words.filter(has).length };
+  }).filter(x => x.all);
+  const best = Math.max(0, ...found.map(x => x.hits));
+  return found.filter(x => x.hits === best).sort((a, b) => a.s.name.localeCompare(b.s.name)).slice(0, 6).map(x => x.s);
+}
+// Keep only numbers that make sense for a riflescope; anything else counts as "not published".
+function cleanScope(v) {
+  const n = x => (typeof x === "number" || (typeof x === "string" && x.trim() !== "")) && isFinite(+x) ? +x : null;
+  const unit = /^mil|^mrad/i.test(String(v.unit)) ? "MIL" : /^moa/i.test(String(v.unit)) ? "MOA" : null;
+  if (!unit) return null;
+  const hi = unit === "MOA" ? 1 : 0.25, click = n(v.click), plane = /^ffp|^first/i.test(String(v.plane)) ? "FFP" : /^sfp|^second/i.test(String(v.plane)) ? "SFP" : null;
+  const lo = n(v.magMin), up = n(v.magMax), pt = n(v.perTurn), dm = n(v.dialMax ?? v.dialLimit), tv = n(v.travel ?? v.totalTravel), tm = n(v.trueMag);
+  const k = unit === "MOA" ? 1 : 1 / 3.43775;
+  return {
+    name: String(v.name || "").trim(), unit, plane,
+    click: click > 0 && click <= hi ? click : null,
+    magMin: lo > 0 && lo < 30 ? lo : null, magMax: up > (lo || 0) && up <= 60 ? up : null,
+    perTurn: pt >= 5 * k && pt <= 40 * k ? pt : null, dialMax: dm >= 5 * k && dm <= 200 * k ? dm : null, travel: tv >= 10 * k && tv <= 300 * k ? tv : null,
+    trueMag: tm > 0 && tm <= 60 ? tm : null, reticleUnit: /^(MOA|MIL|BDC|none)$/.test(v.reticleUnit) ? v.reticleUnit : null, src: v.src || v.source || "", srcKind: v.srcKind || null
+  };
+}
+// Put a looked-up scope on this rifle. Anything the maker doesn't publish keeps a safe default and is named in the note.
+function applyScope(v, how) {
+  const c = cleanScope(v);
+  if (!c) { scLookSay("That result had no turret units, so nothing was changed. Enter the specs by hand.", true); return; }
+  const def = c.unit === "MOA" ? { click: 0.25, perTurn: 15, dialMax: 30 } : { click: 0.1, perTurn: 10, dialMax: 20 };
+  const miss = [];
+  const pick = (k, label) => { if (c[k] != null) return c[k]; miss.push(label); return null; };
+  const out = { ...GENERIC_SCOPE, name: c.name || scp().name || "", unit: c.unit, src: c.src, how };
+  out.click = pick("click", "click value") ?? def.click;
+  out.plane = pick("plane", "focal plane") ?? "SFP";
+  out.magMin = pick("magMin", "lowest power") ?? 3;
+  out.magMax = pick("magMax", "highest power") ?? Math.max(out.magMin + 1, 9);
+  out.perTurn = pick("perTurn", `${c.unit} per turn`) ?? def.perTurn;
+  // Most makers publish total travel, which is split above and below center: about half of it is there to dial up.
+  const est = c.dialMax == null && c.travel != null ? Math.round(c.travel / 2 / (c.unit === "MOA" ? 0.5 : 0.1)) * (c.unit === "MOA" ? 0.5 : 0.1) : null;
+  out.dialMax = c.dialMax ?? (est != null ? +est.toFixed(1) : (miss.push(`most ${c.unit} you can dial up`), def.dialMax));
+  const marks = c.reticleUnit !== "none";
+  out.trueMag = out.plane === "FFP" ? out.magMax : (c.trueMag ?? (marks && miss.push("power the reticle is true at"), out.magMax));
+  if (c.reticleUnit) out.reticleUnit = c.reticleUnit;
+  const was = sc().unit;
+  S.rifle.scope = out;
+  S.mag = Math.min(Math.max(S.mag || out.magMax, out.magMin), out.magMax);
+  save(); render();
+  const parts = [`Scope set: ${out.name}. ${out.click} ${out.unit} clicks, ${out.plane === "FFP" ? "first" : "second"} focal plane, ${out.magMin}-${out.magMax}x.`];
+  if (was !== out.unit) parts.push(`Every hold, click and dope card number is now in ${out.unit}.`);
+  if (out.reticleUnit && out.reticleUnit !== out.unit) parts.push(`Its reticle is ${out.reticleUnit === "BDC" ? "a BDC (drop marks for one load), not " + out.unit + " marks, so dial rather than hold" : "marked in " + out.reticleUnit + ", not " + out.unit + ": hold in reticle marks with care"}.`);
+  if (c.reticleUnit === "none") parts.push("Plain crosshair with no hold marks: dial for elevation.");
+  if (est != null) parts.push(`Most you can dial up is set to ${fmt(out.dialMax, 1)} ${c.unit}, about half the ${fmt(c.travel, 1)} ${c.unit} total travel. Dial up from your zero until it stops and enter the real number.`);
+  if (miss.length) parts.push(`Not published, so check and fill in: ${miss.join(", ")}.`);
+  parts.push(how === "list" ? (c.srcKind === "retailer" ? "From retailer listings (the maker's page wasn't available). Check against your turret cap." : "From the maker's published specs.") : how === "search" ? "Found online from the maker's specs. Check them against your turret cap." : "From Claude's memory, not a live search. Check every number against your scope.");
+  scLookSay(parts.join(" "), false);
+}
+function scLookSay(t, bad) { const p = $("scLookNote"); p.textContent = t; p.hidden = !t; p.classList.toggle("err", !!bad); }
+function showVariants(list, how, lead) {
+  const box = $("scVariants");
+  box.innerHTML = list.map((v, i) => `<button class="chip" type="button" data-i="${i}">${String(v.name).replace(/</g, "&lt;")}</button>`).join("");
+  box.hidden = !list.length;
+  box.querySelectorAll(".chip").forEach(b => b.onclick = () => { box.hidden = true; $("scMatches").hidden = true; applyScope(list[b.dataset.i], how); });
+  if (lead) scLookSay(lead, false);
+}
+function renderScopeMatches() {
+  const m = scopeMatches($("scName").value), box = $("scMatches");
+  box.innerHTML = m.map((s, i) => `<button class="chip" type="button" data-i="${i}">${s.name.replace(/</g, "&lt;")}</button>`).join("");
+  box.hidden = !m.length;
+  box.querySelectorAll(".chip").forEach(b => b.onclick = () => { box.hidden = true; $("scVariants").hidden = true; applyScope(m[b.dataset.i], "list"); });
+}
+$("scName").addEventListener("input", renderScopeMatches);
+let scBusy = false;
+$("scLook").onclick = async () => {
+  const name = $("scName").value.trim();
+  $("scVariants").hidden = true;
+  if (!name) { scLookSay("Type the scope's make and model first, e.g. Vortex Diamondback 4-12x40.", true); return; }
+  const m = scopeMatches(name);
+  if (m.length === 1) { applyScope(m[0], "list"); return; }
+  if (m.length > 1) { showVariants(m, "list", "More than one match in the built-in list. Tap yours (check the turret cap for MOA or MIL):"); return; }
+  if (!SAMPLE || (SAMPLE.ready && !SAMPLE.ready())) {
+    scLookSay(!navigator.onLine ? "Not in the built-in list, and there's no signal to look it up. Enter the specs from the turret cap and manual, or try again with signal."
+      : SAMPLE && SAMPLE.getKey && !SAMPLE.getKey() ? "Not in the built-in list. Add your Claude API key under Online features to look up any scope, or enter the specs by hand."
+      : "Not in the built-in list, and Claude isn't connected yet. Try again in a few seconds, or enter the specs by hand.", true);
+    return;
+  }
+  if (scBusy) return;
+  scBusy = true; $("scLook").disabled = true; scLookSay("Looking up the maker's specs. This can take up to a minute.", false);
+  const prompt = `Find the published specifications of this riflescope: "${name.slice(0, 120)}".
+Use the manufacturer's own product page or manual. Never guess a number: use null for anything the maker doesn't publish.
+Reply with only one JSON object:
+{"found": boolean, "note": string|null, "variants": [{"name": string, "unit": "MOA"|"MIL", "click": number, "perTurn": number|null,
+ "plane": "FFP"|"SFP", "magMin": number|null, "magMax": number|null, "trueMag": number|null, "reticleUnit": "MOA"|"MIL"|"BDC"|"none"|null,
+ "dialLimit": number|null, "totalTravel": number|null, "src": string|null}]}
+Rules: list one variant for each version of this model that differs in turret units, click value or focal plane (for example separate MOA and MRAD versions), with the difference in its name.
+perTurn = adjustment per full turret revolution. dialLimit = how far the elevation dial goes up from zero, only if the maker states it (e.g. Leupold "Dial Travel Limit").
+totalTravel = total internal elevation adjustment range. Both in turret units. reticleUnit "none" = plain crosshair with no hold marks. trueMag = for a second focal plane scope, the power at which the reticle marks are true.
+If clicks are given in inches or cm at 100 yd/m (not true MOA or MRAD), convert click, perTurn and travel to MOA, e.g. 1/4 inch at 100 yd = 0.24 MOA.
+src = the URL you used. If you can't tell which scope this is, set found to false and say what's ambiguous in note.`;
+  let r, how = "search";
+  try {
+    try { r = await SAMPLE.json(prompt, { modelTier: "default", webSearch: true }); }
+    catch (e) { if (!e || e.code !== "invalid_request") throw e; how = "memory"; r = await SAMPLE.json(prompt, { modelTier: "default" }); }
+    if (!window.kbSample) how = "memory"; // inside claude.ai the app has no web search
+  } catch (e) {
+    scBusy = false; $("scLook").disabled = false;
+    scLookSay({ offline: "Lost signal. Enter the specs by hand, or try again with signal.", no_key: "Add your Claude API key under Online features to look up scopes.",
+      bad_key: "Your Claude API key was rejected. Check it under Online features.", no_credit: "Your Claude API account is out of credit (or hit its spending limit). Enter the specs by hand.",
+      rate_limited: "Too many requests right now. Try again in a minute.", invalid_json: "Couldn't make sense of the answer. Try the full name as printed on the scope." }[e && e.code]
+      || "The lookup didn't work. Enter the specs from the turret cap and manual.", true);
+    return;
+  }
+  scBusy = false; $("scLook").disabled = false;
+  const list = (r && Array.isArray(r.variants) ? r.variants : []).filter(v => cleanScope(v));
+  if (!r || r.found === false || !list.length) { scLookSay(`Couldn't pin down that scope${r && r.note ? ": " + r.note : "."} Try the full name as printed on the scope, or enter the specs by hand.`, true); return; }
+  if (list.length === 1) applyScope(list[0], how);
+  else showVariants(list, how, "This scope comes in more than one version. Tap yours (MOA or MIL is printed on the turret cap):");
+};
 $("addRifle").onclick = () => {
   syncOut();
   const n = Object.keys(S.rifles).length + 1, cal = rifleCal();
   S.rifle = { id: "r" + Date.now().toString(36), name: "Rifle " + n, caliber: cal, barrelIn: 22, sightHeight: 1.5, zeroRange: 100, twist: (CALIBERS[cal] || CALIBERS.Other).twist, scope: { ...GENERIC_SCOPE } };
   S.zeroEnv = { ...S.zeroEnv }; S.zeroLoad = null; S.load = null;
+  ["scMatches", "scVariants", "scLookNote"].forEach(i => $(i).hidden = true);
   ensureLoad(); save(); render();
   $("rifNote").textContent = "New rifle added. Name it, pick its caliber, enter its scope, then set where you zeroed.";
   $("rName").focus(); $("rName").select();

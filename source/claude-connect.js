@@ -61,11 +61,14 @@
     let text = "";
     for (let round = 0; round < 6; round++) {
       const body = { model, max_tokens: 1500, messages: msgs };
-      if (tools.length) body.tools = tools;
+      // opts.webSearch: let Claude search the web itself (Anthropic runs the search; billed to the same key).
+      const all = opts.webSearch ? [...tools, { type: "web_search_20250305", name: "web_search", max_uses: 3 }] : tools;
+      if (all.length) body.tools = all;
       const res = await call(body, opts.signal);
       const blocks = res.content || [];
       const t = blocks.filter(b => b.type === "text").map(b => b.text).join("");
       if (t.trim()) text = text ? text + "\n\n" + t : t;
+      if (res.stop_reason === "pause_turn") { msgs.push({ role: "assistant", content: blocks }); continue; } // long search: let it carry on
       const uses = blocks.filter(b => b.type === "tool_use");
       if (res.stop_reason !== "tool_use" || !uses.length) break;
       msgs.push({ role: "assistant", content: blocks });

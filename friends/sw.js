@@ -1,5 +1,5 @@
 // Kohl Ballistics offline cache (friends edition). VERSION changes with every build so phones pick up updates.
-const VERSION = "kohl-friends-20261015152824";
+const VERSION = "kohl-friends-20261015165924";
 const FILES = ["./", "./index.html", "./manifest.json", "../icons/icon-192.png", "../icons/icon-512.png", "../icons/maskable-512.png", "../icons/apple-touch-icon.png", "../fonts/barlow-condensed-latin-500-normal.woff2", "../fonts/barlow-condensed-latin-600-normal.woff2", "../fonts/barlow-condensed-latin-700-normal.woff2", "../fonts/jetbrains-mono-latin-400-normal.woff2", "../fonts/jetbrains-mono-latin-600-normal.woff2", "../fonts/source-sans-3-latin-400-normal.woff2", "../fonts/source-sans-3-latin-600-normal.woff2", "../fonts/source-sans-3-latin-700-normal.woff2"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES))); });
 self.addEventListener("activate", e => {

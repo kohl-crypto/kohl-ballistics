@@ -14,6 +14,11 @@ It keeps its data separately from Lance's edition, so the two never mix.
 Installing on iPhone: open the friends link in Safari, tap Share, then Add to Home Screen.
 Installing on Android: open it in Chrome, tap the ⋮ menu, then Install app.
 
+Scopes: type the make and model under Rifle & scope. 51 popular hunting scopes are built in (specs from each
+maker's own page or manual) and fill in with one tap, with no signal needed. Anything else can be looked up online
+with Claude. Turret units (MOA or MIL), click value, focal plane and power come from the scope, and every hold,
+click and dope card number follows the scope on the selected rifle.
+
 ## What's here
 - `index.html`, `sw.js`, `manifest.json`, `icons/`, `fonts/`: Lance's edition (GitHub Pages serves these).
 - `friends/`: the friends' edition (shares `icons/` and `fonts/`).
