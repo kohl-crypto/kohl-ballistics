@@ -1,7 +1,7 @@
 {
   "name": "Kohl Ballistics",
   "short_name": "Kohl Ballistics",
-  "description": "Offline ballistic calculator for a .30-06 BLR.",
+  "description": "Kohl Ballistics: ballistic calculator for a .30-06 BLR. Works offline.",
   "start_url": "./",
   "scope": "./",
   "id": "./",
@@ -10,8 +10,23 @@
   "background_color": "#0E1410",
   "theme_color": "#0E1410",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ]
 }

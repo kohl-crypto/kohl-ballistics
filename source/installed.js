@@ -70,6 +70,22 @@
   document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
   refresh();
 
+  // ---- Install hint when opened in a browser tab instead of from the home screen ----
+  const standalone = (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  let hintOff = false; try { hintOff = localStorage.getItem("kb-install-hint") === "off"; } catch (e) {}
+  if (!standalone && !hintOff) {
+    const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+    const box = document.createElement("div");
+    box.className = "panel"; box.id = "installHint";
+    box.innerHTML = `<div class="row" style="justify-content:space-between"><h2>Put it on your home screen</h2><button class="btn" id="ihClose" type="button">Got it</button></div>
+      <p class="note" style="margin:0">${ios
+        ? "In Safari, tap the Share button (the square with an arrow), then <b>Add to Home Screen</b>, then <b>Add</b>. Open it from the new icon and it works with no signal."
+        : "In Chrome, tap the ⋮ menu, then <b>Install app</b> (or <b>Add to Home screen</b>). Open it from the new icon and it works with no signal."}
+      Your rifles, loads and zero stay on this phone.</p>`;
+    const shoot = $("tab-shoot"); shoot.insertBefore(box, shoot.firstChild);
+    $("ihClose").onclick = () => { box.remove(); try { localStorage.setItem("kb-install-hint", "off"); } catch (e) {} };
+  }
+
   // ---- Offline caching and updates ----
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js").then(reg => {
