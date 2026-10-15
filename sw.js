@@ -1,5 +1,5 @@
 // Kohl Ballistics offline cache (lance edition). VERSION changes with every build so phones pick up updates.
-const VERSION = "kohl-lance-20261015174656";
+const VERSION = "kohl-lance-20261015175426";
 const FILES = ["./", "./index.html", "./manifest.json", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "fonts/barlow-condensed-latin-500-normal.woff2", "fonts/barlow-condensed-latin-600-normal.woff2", "fonts/barlow-condensed-latin-700-normal.woff2", "fonts/jetbrains-mono-latin-400-normal.woff2", "fonts/jetbrains-mono-latin-600-normal.woff2", "fonts/source-sans-3-latin-400-normal.woff2", "fonts/source-sans-3-latin-600-normal.woff2", "fonts/source-sans-3-latin-700-normal.woff2"];
 self.addEventListener("install", e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES))); });
 self.addEventListener("activate", e => {
