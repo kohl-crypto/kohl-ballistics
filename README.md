@@ -20,6 +20,11 @@ Installing on Android: open it in Chrome, tap the ⋮ menu, then Install app.
 - `source/app.html`: the main app page.
 - `source/claude-connect.js`: talks to the Claude API with the key stored on the phone.
 - `source/installed.js`: online/offline switching, Online features panel, offline caching.
-- `source/build.py`: rebuilds both editions from `source/`. Run `python3 source/build.py`.
+- `source/build.py`: rebuilds both editions from `source/`. Run `python3 source/build.py` (needs Node.js too).
+- `source/check/`: the solver self-check. Before and after every build, `check_solver.js` runs both editions'
+  ballistics engine on six test shots (.30-06, .308, 6.5 CM; wind, altitude, cold, heat and humidity, uphill,
+  spin drift) and compares drop, wind, velocity and time of flight with numbers from py-ballisticcalc, an
+  independent open-source solver. If anything is off, the build stops. `make_reference.py` regenerates those
+  numbers when a test shot is added or changed.
 
 No personal data or API keys are stored in this repository. Loads, zero and the API key live only on the phone.

@@ -3,19 +3,43 @@
   Lance's edition   -> index.html, sw.js, manifest.json at the repo root
   Friends' edition  -> friends/index.html, friends/sw.js, friends/manifest.json
 Each edition keeps its own data on the phone, so they never mix.
+Before writing anything, and again after, the ballistics engine is checked against independent
+reference numbers (source/check/). If it's off, the build stops. Needs Node.js.
 Usage: python3 source/build.py"""
-import re, os, json, datetime
+import re, os, json, datetime, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
+CHECK = os.path.join(HERE, 'check', 'check_solver.js')
 
-base = open(os.path.join(HERE, 'app.html')).read()
+
+def check_solver(*pages):
+    node = shutil.which('node')
+    if not node:
+        sys.exit('build stopped: Node.js is needed to check the ballistics engine (https://nodejs.org)')
+    if subprocess.run([node, CHECK, *pages]).returncode:
+        sys.exit('build stopped: the ballistics engine no longer matches the reference numbers (see above)')
+
+
+def read(path):
+    with open(path, encoding='utf-8') as f:
+        return f.read()
+
+
+def write(path, text):
+    with open(path, 'w', encoding='utf-8', newline='\n') as f:
+        f.write(text)
+
+
+check_solver(os.path.join(HERE, 'app.html'))
+
+base = read(os.path.join(HERE, 'app.html'))
 base = re.sub(r'<link rel="stylesheet" href="https://fonts.googleapis.com[^>]*>\n?', '', base, count=1)
 title = re.search(r'<title>.*?</title>\n?', base).group(0)
 base = base.replace(title, '', 1).replace('<meta name="claude:viewport-fit-sides" content="cover">\n', '', 1)
 
-connect = open(os.path.join(HERE, 'claude-connect.js')).read()
-installed = open(os.path.join(HERE, 'installed.js')).read()
+connect = read(os.path.join(HERE, 'claude-connect.js'))
+installed = read(os.path.join(HERE, 'installed.js'))
 fonts = sorted(f for f in os.listdir(os.path.join(ROOT, 'fonts')) if f.endswith('.woff2'))
 version = datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d%H%M%S')
 
@@ -65,7 +89,7 @@ img{{max-width:100%}}
 <div class="offbar" id="netBar" hidden></div>
 '''
     page = head + base + '\n<script>\n' + installed + '</script>\n</body>\n</html>\n'
-    open(os.path.join(out, 'index.html'), 'w').write(page)
+    write(os.path.join(out, 'index.html'), page)
 
     manifest = {
         "name": "Kohl Ballistics", "short_name": "Kohl Ballistics", "description": ed["desc"],
@@ -75,7 +99,7 @@ img{{max-width:100%}}
             {"src": f"{up}icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
             {"src": f"{up}icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
             {"src": f"{up}icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}]}
-    open(os.path.join(out, 'manifest.json'), 'w').write(json.dumps(manifest, indent=2) + "\n")
+    write(os.path.join(out, 'manifest.json'), json.dumps(manifest, indent=2) + "\n")
 
     files = ['./', './index.html', './manifest.json'] + [f'{up}icons/{i}' for i in ('icon-192.png', 'icon-512.png', 'maskable-512.png', 'apple-touch-icon.png')] + [f'{up}fonts/{f}' for f in fonts]
     sw = f'''// Kohl Ballistics offline cache ({ed['key']} edition). VERSION changes with every build so phones pick up updates.
@@ -96,6 +120,7 @@ self.addEventListener("fetch", e => {{
   }}));
 }});
 '''
-    open(os.path.join(out, 'sw.js'), 'w').write(sw)
+    write(os.path.join(out, 'sw.js'), sw)
     print('built', ed['key'], len(page), 'bytes')
+check_solver(*(os.path.join(ed['out'], 'index.html') for ed in EDITIONS))
 print('version', version)
