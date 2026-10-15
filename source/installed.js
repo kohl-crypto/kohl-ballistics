@@ -1,0 +1,85 @@
+// Kohl Ballistics installed app: online/offline switching, Online features settings, offline caching.
+(() => {
+  const $ = id => document.getElementById(id);
+  const S = window.kbSample;
+
+  // ---- Online features panel (Rifle & load tab) ----
+  const panel = document.createElement("div");
+  panel.className = "panel"; panel.id = "onlinePanel";
+  panel.innerHTML = `
+    <div class="row" style="justify-content:space-between"><h2>Online features</h2><span class="pill" id="olPill"></span></div>
+    <p class="note" style="margin:0" id="olText"></p>
+    <label class="field"><span class="lbl">Claude API key</span>
+      <input type="password" id="olKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-..."></label>
+    <div class="row" style="gap:8px">
+      <button class="btn primary" id="olSave" type="button">Save key</button>
+      <button class="btn" id="olTest" type="button">Test</button>
+      <button class="btn" id="olRemove" type="button">Remove key</button>
+    </div>
+    <span class="note" id="olNote"></span>
+    <details class="lesson"><summary>How to get a key</summary>
+      <p>1. On a computer or phone, go to <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a> and sign in or create an account.</p>
+      <p>2. Under Billing, add a payment method and a small credit. Under Limits, set a monthly spend limit, such as $5, so costs can never run away.</p>
+      <p>3. Under API keys, create a key named "Kohl Ballistics" and copy it. Paste it above and tap Save key.</p>
+      <p>The key stays on this phone only. It is never put in your backups. If your phone is lost, delete the key in the console and make a new one.</p>
+    </details>`;
+  const gear = $("tab-gear");
+  const backupPanel = $("bkSave") && $("bkSave").closest(".panel");
+  if (backupPanel) gear.insertBefore(panel, backupPanel); else gear.append(panel);
+
+  function refresh() {
+    const has = !!S.getKey(), on = navigator.onLine, live = has && on;
+    $("olPill").className = "pill " + (live ? "good" : has ? "warn" : "bad");
+    $("olPill").textContent = live ? "On" : has ? "No signal" : "No key";
+    $("olText").textContent = live
+      ? "Spotter and box-photo reading are on. They turn off by themselves when you lose signal; everything else keeps working."
+      : has ? "Your key is saved. Spotter and box-photo reading come back as soon as you have signal."
+      : "Add your Claude API key to turn on the Spotter and box-photo reading whenever you have signal.";
+    $("olRemove").hidden = !has; $("olTest").hidden = !has;
+    $("olKey").placeholder = has ? "Key saved (ends …" + S.getKey().slice(-4) + "). Paste a new one to replace it." : "sk-ant-...";
+    // Features appear and disappear with signal.
+    $("spBtn").hidden = !live;
+    if (!live && !$("spotter").hidden) { $("spotter").hidden = true; $("spBtn").setAttribute("aria-expanded", "false"); }
+    ["pickCam", "pickLib"].forEach(id => { $(id).hidden = !live; });
+    const bar = $("netBar");
+    bar.hidden = on && !bar.dataset.update;
+    if (bar.dataset.update) bar.textContent = bar.dataset.update;
+    else if (!on) bar.textContent = "No signal. The calculator works; Spotter and photo reading return with signal.";
+  }
+  $("olSave").onclick = () => {
+    const k = $("olKey").value.trim();
+    if (!k) { $("olNote").textContent = "Paste your key first."; return; }
+    if (!/^sk-ant-/.test(k)) { $("olNote").textContent = "That doesn't look like a Claude API key. Keys start with sk-ant-."; return; }
+    S.setKey(k); $("olKey").value = ""; $("olNote").textContent = "Key saved on this phone."; refresh();
+  };
+  $("olTest").onclick = async () => {
+    $("olNote").textContent = "Testing…";
+    try { await S.test(); $("olNote").textContent = "Key works. Online features are ready."; }
+    catch (e) {
+      $("olNote").textContent = ({ offline: "No signal right now. Test again when you have signal.", bad_key: "The key was rejected. Check that you copied all of it, or make a new one.",
+        no_credit: "The key works but the account has no credit. Add credit in the console.", rate_limited: "Too many requests. Try again in a minute." })[e && e.code]
+        || ("Couldn't reach Claude: " + ((e && e.message) || "unknown error"));
+    }
+  };
+  $("olRemove").onclick = () => {
+    const b = $("olRemove");
+    if (!b.dataset.armed) { b.dataset.armed = 1; b.textContent = "Tap again to remove"; setTimeout(() => { delete b.dataset.armed; b.textContent = "Remove key"; }, 4000); return; }
+    delete b.dataset.armed; b.textContent = "Remove key"; S.setKey(""); $("olNote").textContent = "Key removed from this phone."; refresh();
+  };
+  addEventListener("online", refresh); addEventListener("offline", refresh); addEventListener("kb-online-change", refresh);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+  refresh();
+
+  // ---- Offline caching and updates ----
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("sw.js").then(reg => {
+      reg.addEventListener("updatefound", () => {
+        const w = reg.installing; if (!w) return;
+        w.addEventListener("statechange", () => {
+          if (w.state === "installed" && navigator.serviceWorker.controller) { $("netBar").dataset.update = "Update downloaded. Close and reopen the app to use it."; refresh(); }
+        });
+      });
+    }).catch(() => {});
+  }
+  try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+})();

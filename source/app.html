@@ -1,0 +1,1413 @@
+<title>Kohl Ballistics</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: single phone column — sticky tab strip, a "solution" panel up top, inputs below; dope-card table scrolls in its own box */
+:root{
+  --bg:#ECF0EA; --surface:#F8FAF6; --sunk:#E2E8E0; --ink:#17201A; --muted:#5A665D; --line:#C8D1C8;
+  --accent:#D4561C; --accent-ink:#FFFFFF; --accent-soft:#F6DCCD;
+  --good:#2C7A47; --warn:#A86E12; --bad:#B3382A; --dot:#FF7A00;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --body:"Source Sans 3",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E1410; --surface:#151D18; --sunk:#0A0F0C; --ink:#E3E9E2; --muted:#93A096; --line:#29342D;
+  --accent:#EF7234; --accent-ink:#140A04; --accent-soft:#3A2216;
+  --good:#5DBE80; --warn:#E2AE4A; --bad:#EE6B5B; --dot:#39FF14; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E1410; --surface:#151D18; --sunk:#0A0F0C; --ink:#E3E9E2; --muted:#93A096; --line:#29342D;
+  --accent:#EF7234; --accent-ink:#140A04; --accent-soft:#3A2216;
+  --good:#5DBE80; --warn:#E2AE4A; --bad:#EE6B5B; --dot:#39FF14; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);margin:0}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 48px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:6px 10px}
+h1{font:700 1.75rem/1 var(--display);letter-spacing:.02em;text-transform:uppercase;margin:0}
+.sub{color:var(--muted);font-size:.85rem}
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-block:6px;border-bottom:1px solid var(--line)}
+nav.tabs button{font:600 1rem/1 var(--display);text-transform:uppercase;letter-spacing:.06em;background:none;border:0;color:var(--muted);padding:10px 4px;border-radius:6px;cursor:pointer}
+nav.tabs button[aria-selected="true"]{color:var(--accent-ink);background:var(--accent)}
+section.tab{display:flex;flex-direction:column;gap:14px;padding-top:14px}
+.zline{font-size:.88rem;background:var(--sunk);border-radius:8px;padding:8px 10px;display:flex;flex-direction:column;gap:2px}
+.zline b{font-weight:700}
+.splog{display:flex;flex-direction:column;gap:8px;max-height:46vh;overflow-y:auto}
+.msg{padding:8px 11px;border-radius:10px;max-width:88%;white-space:pre-wrap;font-size:.95rem}
+.msg.me{align-self:flex-end;background:var(--accent);color:var(--accent-ink)}
+.msg.sp{align-self:flex-start;background:var(--sunk)}
+.msg.sys{align-self:center;background:none;color:var(--muted);font-size:.85rem;text-align:center}
+.spform{display:flex;gap:8px}
+.spform input{flex:1;min-width:0;font-family:var(--body)}
+.spot{border-color:var(--accent)}
+.lib summary{cursor:pointer;font-weight:600;padding:6px 0}
+.liblist{display:flex;flex-direction:column}
+.libsearch{display:flex;flex-direction:column;gap:6px;border-top:1px solid var(--line);padding-top:10px}
+.libsearch input{font-family:var(--body)}
+.star{background:none;border:0;padding:6px;cursor:pointer;color:var(--muted);display:grid;place-items:center}
+.star[aria-pressed="true"]{color:var(--accent)}
+.star svg{width:22px;height:22px}
+.librow{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+.librow b{display:block;font-size:.95rem}
+.librow span{font:.8rem var(--mono);color:var(--muted)}
+.libline{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.07em;color:var(--accent);padding-top:12px}
+.addpick{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.addpick label.btn{display:inline-block}
+.addpick label[aria-disabled="true"]{opacity:.45;pointer-events:none}
+.vh{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;clip:rect(0 0 0 0)}
+.addbox{border:1px dashed var(--accent);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:10px;background:var(--sunk)}
+.addbox img{max-width:100%;max-height:220px;object-fit:contain;border-radius:6px;align-self:flex-start}
+.err{color:var(--bad);font-weight:600}
+.btn:disabled{opacity:.5;cursor:default}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+h2{font:600 1.15rem/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;margin:0;color:var(--muted)}
+h3{font:600 1.05rem/1.2 var(--body);margin:0}
+.lbl{display:flex;align-items:center;gap:6px;font-size:.78rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:600}
+.q{width:20px;height:20px;border-radius:50%;border:1px solid var(--line);background:var(--sunk);color:var(--muted);font:700 .72rem/1 var(--body);cursor:pointer;display:inline-grid;place-items:center;padding:0}
+.q[aria-expanded="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.help{font-size:.9rem;background:var(--accent-soft);border-radius:8px;padding:8px 10px;color:var(--ink)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+input[type=number],input[type=text],select{font:600 1rem var(--mono);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;min-width:0}
+input[type=range]{width:100%;accent-color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stepper{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;align-items:center}
+.stepper button,.btn{font:600 1rem var(--display);text-transform:uppercase;letter-spacing:.05em;background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px 12px;cursor:pointer}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bigval{font:700 2.6rem/1 var(--display);text-align:center;font-variant-numeric:tabular-nums}
+.bigval small{font-size:1rem;color:var(--muted);margin-left:4px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{font:600 .85rem var(--body);border:1px solid var(--line);background:var(--sunk);color:var(--ink);padding:6px 10px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden}
+.seg button{font:600 .9rem var(--display);text-transform:uppercase;letter-spacing:.05em;padding:7px 12px;border:0;background:var(--sunk);color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+/* solution */
+.solution{border-color:var(--accent);border-width:2px}
+.sol-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;align-items:center}
+@media (max-width:520px){.sol-grid{grid-template-columns:1fr}}
+.call{font:700 2.1rem/1 var(--display);text-transform:uppercase;letter-spacing:.01em}
+.call .n{color:var(--accent);font-variant-numeric:tabular-nums}
+.callsub{color:var(--muted);font-size:.9rem}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.stat{background:var(--sunk);border-radius:8px;padding:8px}
+.stat b{display:block;font:600 1.15rem var(--mono);font-variant-numeric:tabular-nums}
+.stat span{font-size:.72rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted)}
+.flags{display:flex;flex-direction:column;gap:6px}
+.flag{display:flex;gap:8px;align-items:flex-start;font-size:.9rem}
+.pill{flex:none;font:700 .7rem/1 var(--body);text-transform:uppercase;letter-spacing:.06em;padding:4px 7px;border-radius:4px;color:var(--bg)}
+.pill.good{background:var(--good)} .pill.warn{background:var(--warn)} .pill.bad{background:var(--bad)}
+.insights{display:flex;flex-direction:column;gap:10px;margin:0;padding:0;list-style:none}
+.insights li{display:grid;grid-template-columns:4.6rem 1fr;gap:10px;align-items:start}
+.insights .d{font:600 .95rem var(--mono);text-align:right;font-variant-numeric:tabular-nums;color:var(--accent)}
+.insights p{margin:0;font-size:.92rem}
+.insights strong{display:block;font-size:.95rem}
+svg text{font-family:var(--mono)}
+.reticle{width:100%;max-width:380px;justify-self:center;aspect-ratio:1}
+.clock{width:150px;height:150px;flex:none}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;font:.9rem var(--mono);font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:600 .72rem var(--body);text-transform:uppercase;letter-spacing:.06em;color:var(--muted);background:var(--sunk);position:sticky;top:0}
+td:first-child,th:first-child{text-align:left}
+tr.cur td{background:var(--accent-soft)}
+td.bad{color:var(--bad)} td.warn{color:var(--warn)}
+.note{font-size:.85rem;color:var(--muted)}
+details.lesson{border-top:1px solid var(--line);padding-block:10px}
+details.lesson:first-of-type{border-top:0}
+details.lesson summary{cursor:pointer;font:600 1.05rem var(--body);list-style:none;display:flex;justify-content:space-between;gap:10px}
+details.lesson summary::after{content:"+";color:var(--accent);font-weight:700}
+details.lesson[open] summary::after{content:"–"}
+details.lesson p{margin:.6em 0;max-width:65ch}
+.quiz-q{font:600 1.3rem/1.25 var(--display);letter-spacing:.02em}
+.result{font-size:.95rem;background:var(--sunk);border-radius:8px;padding:10px}
+.chart{width:100%;height:auto}
+.dial{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px}
+.dial div{background:var(--sunk);border-radius:6px;padding:6px;text-align:center;font:.85rem var(--mono)}
+.dial b{display:block;font:700 1.05rem var(--display);color:var(--accent)}
+@media (prefers-reduced-motion:no-preference){.call .n{transition:color .2s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="row" style="gap:10px"><h1>Kohl Ballistics</h1><button class="btn primary" id="spBtn" type="button" aria-expanded="false" aria-controls="spotter">Spotter</button></div>
+    <span class="sub" id="hdrSub">.30-06 · VX-5HD 3-15x44 CDS-ZL2</span>
+  </header>
+  <section class="panel spot" id="spotter" hidden aria-label="Spotter">
+    <div class="row" style="justify-content:space-between">
+      <h2>Spotter</h2>
+      <div class="row" style="gap:6px">
+        <button class="chip" id="spSpeak" type="button" aria-pressed="false">Read aloud</button>
+        <button class="btn" id="spClose" type="button">Close</button>
+      </div>
+    </div>
+    <div class="splog" id="spLog" aria-live="polite"></div>
+    <form class="spform" id="spForm">
+      <input type="text" id="spIn" autocomplete="off" enterkeyhint="send" placeholder="e.g. 425 yards, wind 8 from 2 o'clock, 10 down" aria-label="Talk to your spotter">
+      <button class="btn primary" id="spSend" type="submit">Send</button>
+    </form>
+    <span class="note" id="spNote">Tap the microphone on your keyboard to talk instead of typing. The spotter needs internet; the firing solution below works without it.</span>
+  </section>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="shoot" aria-selected="true">Shoot</button>
+    <button role="tab" data-tab="card" aria-selected="false">Dope card</button>
+    <button role="tab" data-tab="gear" aria-selected="false">Rifle &amp; load</button>
+    <button role="tab" data-tab="learn" aria-selected="false">Learn</button>
+  </nav>
+
+  <!-- ============ SHOOT ============ -->
+  <section class="tab" id="tab-shoot">
+    <div class="panel solution">
+      <div class="row" style="justify-content:space-between">
+        <h2 id="solTitle">Firing solution</h2>
+        <div class="seg" role="group" aria-label="Dial or hold">
+          <button id="mDial" aria-pressed="true">Dial</button><button id="mHold" aria-pressed="false">Hold</button>
+        </div>
+      </div>
+      <div class="zline" id="zeroLine"></div>
+      <div class="sol-grid">
+        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+          <div class="call" id="callElev"></div>
+          <div class="callsub" id="callElevSub"></div>
+          <div class="call" id="callWind" style="font-size:1.6rem"></div>
+          <div class="callsub" id="callWindSub"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0">
+          <svg class="reticle" id="reticle" viewBox="-170 -170 340 340" role="img" aria-label="Hold picture on a 1-MOA grid"></svg>
+          <button class="chip" id="sunBtn" type="button" aria-pressed="false">High contrast</button>
+        </div>
+      </div>
+      <div class="row" id="magRow" hidden>
+        <span class="lbl">Magnification <button class="q" data-h="sfp" aria-expanded="false">?</button></span>
+        <input type="range" id="mag" min="3" max="15" step="1" style="flex:1;min-width:120px">
+        <b id="magVal" style="font-family:var(--mono)"></b>
+      </div>
+      <div class="help" data-for="sfp" hidden></div>
+      <div class="row" style="gap:8px"><span class="lbl">Animal</span><div class="chips" id="species" role="group" aria-label="Animal"></div></div>
+      <div class="stats" id="stats"></div>
+      <div class="flags" id="flags"></div>
+    </div>
+
+    <div class="panel">
+      <span class="lbl">Range (yards) <button class="q" data-h="range" aria-expanded="false">?</button></span>
+      <div class="help" data-for="range" hidden></div>
+      <div class="stepper">
+        <button id="rDown" aria-label="Minus 25 yards">−25</button>
+        <div class="bigval"><span id="rangeVal"></span><small>yd</small></div>
+        <button id="rUp" aria-label="Plus 25 yards">+25</button>
+      </div>
+      <input type="range" id="range" min="25" max="1000" step="5" aria-label="Range">
+    </div>
+
+    <div class="panel">
+      <span class="lbl">Wind <button class="q" data-h="wind" aria-expanded="false">?</button></span>
+      <div class="help" data-for="wind" hidden></div>
+      <div class="row" style="align-items:center;gap:16px">
+        <svg class="clock" id="clock" viewBox="-80 -80 160 160" role="group" aria-label="Wind direction clock"></svg>
+        <div style="flex:1;min-width:150px;display:flex;flex-direction:column;gap:6px">
+          <div class="bigval" style="text-align:left"><span id="windVal"></span><small>mph</small></div>
+          <input type="range" id="wind" min="0" max="30" step="1" aria-label="Wind speed">
+          <button class="btn" id="noWind" type="button" aria-pressed="false" style="align-self:flex-start">No wind</button>
+          <div class="note" id="windDesc"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <span class="lbl">Shot angle <button class="q" data-h="angle" aria-expanded="false">?</button></span>
+      <div class="help" data-for="angle" hidden></div>
+      <div class="row"><input type="range" id="angle" min="-35" max="35" step="1" style="flex:1" aria-label="Shot angle"><b id="angleVal" style="font-family:var(--mono);min-width:4.5em;text-align:right"></b></div>
+    </div>
+
+    <div class="panel">
+      <span class="lbl">Air today <button class="q" data-h="air" aria-expanded="false">?</button></span>
+      <div class="help" data-for="air" hidden></div>
+      <div class="chips" id="presets"></div>
+      <div class="grid2">
+        <label class="field"><span class="lbl">Altitude ft</span><input type="number" id="altFt" step="100"></label>
+        <label class="field"><span class="lbl">Temp °F</span><input type="number" id="tempF" step="1"></label>
+        <label class="field"><span class="lbl">Humidity %</span><input type="number" id="rh" step="5" min="0" max="100"></label>
+        <label class="field"><span class="lbl">Station pressure inHg <button class="q" data-h="pressure" aria-expanded="false" type="button">?</button></span><input type="number" id="pressure" step="0.01" placeholder="from altitude"></label>
+      </div>
+      <div class="help" data-for="pressure" hidden></div>
+      <div class="note" id="airNote"></div>
+    </div>
+
+    <div class="panel">
+      <h2>What's moving this shot</h2>
+      <ul class="insights" id="insights"></ul>
+    </div>
+  </section>
+
+  <!-- ============ DOPE CARD ============ -->
+  <section class="tab" id="tab-card" hidden>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between"><h2>Dope card</h2><span class="note" id="cardCond"></span></div>
+      <div class="tbl"><table id="cardTbl"></table></div>
+      <p class="note" style="margin:0">Dial = MOA up on the CDS-ZL2 (¼ MOA clicks). Wind column is for a 10 mph full-value wind; hold that many MOA into the wind and scale for weaker winds (5 mph = half). Red numbers are below the bullet's expansion speed or under the energy guideline for the animal picked on the Shoot tab.</p>
+    </div>
+    <div class="panel">
+      <span class="lbl">Trajectory vs. vital zone <button class="q" data-h="mpbr" aria-expanded="false">?</button></span>
+      <div class="help" data-for="mpbr" hidden></div>
+      <svg class="chart" id="chart" viewBox="0 0 640 300" role="img" aria-label="Bullet path chart"></svg>
+      <div class="row">
+        <span class="lbl">Vital zone</span>
+        <div class="seg" id="vitalSeg"></div>
+      </div>
+      <div class="result" id="mpbrOut"></div>
+    </div>
+    <div class="panel">
+      <span class="lbl">Custom CDS dial preview <button class="q" data-h="cds" aria-expanded="false">?</button></span>
+      <div class="help" data-for="cds" hidden></div>
+      <div class="dial" id="cdsDial"></div>
+    </div>
+  </section>
+
+  <!-- ============ GEAR ============ -->
+  <section class="tab" id="tab-gear" hidden>
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <h2>Load</h2>
+        <div class="row" style="gap:6px">
+          <button class="btn primary" id="addLoad" type="button">+ Add</button>
+          <button class="btn" id="delLoad" type="button">Delete</button>
+        </div>
+      </div>
+      <span class="note" id="delNote"></span>
+      <div class="addpick" id="addPick" hidden>
+        <label class="btn primary" for="ammoCam" id="pickCam">Take photo</label>
+        <label class="btn" for="ammoLib" id="pickLib">Choose photo</label>
+        <button class="btn" id="addType" type="button">Type it in</button>
+        <span class="note" id="addPickNote" style="flex-basis:100%"></span>
+      </div>
+      <input type="file" id="ammoCam" accept="image/*" capture="environment" class="vh" tabindex="-1" aria-hidden="true">
+      <input type="file" id="ammoLib" accept="image/*" class="vh" tabindex="-1" aria-hidden="true">
+      <div class="libsearch" id="libBox">
+        <label class="lbl" for="libQ">Find a load</label>
+        <input type="search" id="libQ" autocomplete="off" placeholder="Maker, bullet, weight or part #, e.g. federal 180 partition">
+        <p class="note" id="libSrc"></p>
+        <div class="liblist" id="libList"></div>
+      </div>
+      <div class="addbox" id="addBox" hidden>
+        <h3 id="addTitle">New load</h3>
+        <img id="addImg" alt="Ammo box photo" hidden>
+        <div class="note" id="addStatus"></div>
+        <div class="err" id="addErr" hidden></div>
+        <div class="grid2" id="addForm">
+          <label class="field" style="grid-column:1/-1"><span class="lbl">Name</span><input type="text" id="aName"></label>
+          <label class="field"><span class="lbl">Caliber</span><input type="text" id="aCal"></label>
+          <label class="field"><span class="lbl">Bullet weight gr</span><input type="number" id="aWeight" step="1"></label>
+          <label class="field"><span class="lbl">Muzzle velocity fps</span><input type="number" id="aMv" step="5"></label>
+          <label class="field"><span class="lbl">Ballistic coeff.</span><input type="number" id="aBc" step="0.001"></label>
+          <label class="field"><span class="lbl">Drag model</span><select id="aModel"><option>G1</option><option>G7</option></select></label>
+          <label class="field"><span class="lbl">Min. expansion fps</span><input type="number" id="aMinExp" step="25"></label>
+        </div>
+        <div class="note" id="aSrc"></div>
+        <div class="row"><button class="btn primary" id="aSave" type="button">Save load</button><button class="btn" id="aRetake" type="button">Retake photo</button><button class="btn" id="aCancel" type="button">Cancel</button></div>
+      </div>
+      <span class="lbl">Favorites</span>
+      <div class="chips" id="loadChips"></div>
+      <div class="row" style="gap:8px"><button class="btn" id="favBtn" type="button" aria-pressed="false"></button><span class="note" id="favNote"></span></div>
+      <div class="grid2">
+        <label class="field"><span class="lbl">Muzzle velocity fps <button class="q" data-h="mv" aria-expanded="false" type="button">?</button></span><input type="number" id="mv" step="5"></label>
+        <label class="field"><span class="lbl">Ballistic coeff. <button class="q" data-h="bc" aria-expanded="false" type="button">?</button></span><input type="number" id="bc" step="0.001"></label>
+        <label class="field"><span class="lbl">Drag model</span><select id="model"><option>G1</option><option>G7</option></select></label>
+        <label class="field"><span class="lbl">Bullet weight gr</span><input type="number" id="weight" step="1"></label>
+        <label class="field"><span class="lbl">Bullet length in</span><input type="number" id="length" step="0.001"></label>
+        <label class="field"><span class="lbl">Min. expansion fps <button class="q" data-h="exp" aria-expanded="false" type="button">?</button></span><input type="number" id="minExp" step="25"></label>
+      </div>
+      <div class="help" data-for="mv" hidden></div><div class="help" data-for="bc" hidden></div><div class="help" data-for="exp" hidden></div>
+      <div class="note" id="loadNote"></div>
+      <div class="addbox" id="poiBox" hidden>
+        <span class="lbl">Where this load hits at your zero <button class="q" data-h="poi" aria-expanded="false" type="button">?</button></span>
+        <div class="help" data-for="poi" hidden></div>
+        <div class="note" id="poiPred"></div>
+        <div class="grid2">
+          <label class="field"><span class="lbl">Inches high (+) / low (−)</span><input type="number" id="poiUp" step="0.25" placeholder="not measured"></label>
+          <label class="field"><span class="lbl">Inches right (+) / left (−)</span><input type="number" id="poiRight" step="0.25" placeholder="not measured"></label>
+        </div>
+        <div class="row"><button class="btn" id="poiClear" type="button">Clear measurement</button></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Rifle &amp; scope</h2>
+      <div class="grid2">
+        <label class="field"><span class="lbl">Sight height in <button class="q" data-h="sh" aria-expanded="false" type="button">?</button></span><input type="number" id="sightHeight" step="0.05"></label>
+        <label class="field"><span class="lbl">Twist 1 in __ in</span><input type="number" id="twist" step="0.5"></label>
+      </div>
+      <div class="help" data-for="sh" hidden></div>
+      <p class="note" style="margin:0">Browning BLR .30-06, 22" barrel. Leupold VX-5HD 3-15x44 (#171716), CDS-ZL2 elevation dial with ZeroLock (¼ MOA clicks, 20 MOA per turn, hard stop at about 38 MOA on the second turn; 75 MOA total internal adjustment). Impact-29 MOA reticle in the second focal plane, true at 15x: 1 MOA hashes, every fourth numbered, wind dots every 2 MOA, grid down to 29 MOA.</p>
+    </div>
+    <div class="panel">
+      <h2>Where you zeroed</h2>
+      <p class="note" style="margin:0">Set these to match how you last sighted in. The solver re-creates that zero shot, then flies today's shot from it with whichever load you select.</p>
+      <div class="grid2">
+        <label class="field"><span class="lbl">Zero range yd <button class="q" data-h="zero" aria-expanded="false" type="button">?</button></span><input type="number" id="zeroRange" step="25" min="25" max="600"></label>
+        <label class="field"><span class="lbl">Zeroed with</span><select id="zLoad"></select></label>
+        <label class="field"><span class="lbl">Altitude ft</span><input type="number" id="zAlt" step="100"></label>
+        <label class="field"><span class="lbl">Temp °F</span><input type="number" id="zTemp" step="1"></label>
+      </div>
+      <div class="help" data-for="zero" hidden></div>
+      <div class="row" style="gap:10px"><button class="btn" id="zSet" type="button" disabled>Set zero</button><span class="note" id="zNote"></span></div>
+    </div>
+    <div class="panel">
+      <span class="lbl">True your velocity <button class="q" data-h="true" aria-expanded="false">?</button></span>
+      <div class="help" data-for="true" hidden></div>
+      <div class="grid2">
+        <label class="field"><span class="lbl">Range shot yd</span><input type="number" id="tRange" value="400" step="25"></label>
+        <label class="field"><span class="lbl">MOA you actually dialed</span><input type="number" id="tMoa" step="0.25" placeholder="e.g. 7.5"></label>
+      </div>
+      <div class="row"><button class="btn primary" id="tGo">Solve velocity</button><span id="tOut" class="note"></span></div>
+    </div>
+    <div class="panel">
+      <h2>Units</h2>
+      <div class="seg" role="group" aria-label="Angular units"><button id="uMOA" aria-pressed="true">MOA</button><button id="uMIL" aria-pressed="false">MIL</button></div>
+      <button class="btn" id="resetAll" style="align-self:flex-start">Reset to defaults</button>
+    </div>
+    <div class="panel">
+      <h2>Back up your loads</h2>
+      <p class="note" style="margin:0">Your loads, favorites, zero and offsets live on this device. A backup moves them to a new phone or between the online and offline versions.</p>
+      <div class="row" style="gap:8px">
+        <button class="btn" id="bkSave" type="button">Save backup file</button>
+        <button class="btn" id="bkCopy" type="button">Copy backup</button>
+        <label class="btn" for="bkFile" id="bkFileLbl">Restore from file</label>
+        <input type="file" id="bkFile" accept=".json,application/json,text/plain" class="vh" tabindex="-1" aria-hidden="true">
+      </div>
+      <details class="lesson"><summary>Paste a backup</summary>
+        <textarea id="bkText" rows="4" style="width:100%;font:.8rem var(--mono);background:var(--sunk);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px" placeholder="Paste backup text here"></textarea>
+        <button class="btn" id="bkPaste" type="button">Restore pasted backup</button>
+      </details>
+      <span class="note" id="bkNote"></span>
+      <span class="note" id="resetNote"></span>
+    </div>
+  </section>
+
+  <!-- ============ LEARN ============ -->
+  <section class="tab" id="tab-learn" hidden>
+    <div class="panel">
+      <h2>Call the shot</h2>
+      <p class="note" style="margin:0">A random elk-woods scenario with your current load and air. Guess the dial and the wind hold, then check.</p>
+      <div class="quiz-q" id="qText"></div>
+      <div class="grid2">
+        <label class="field"><span class="lbl">Your elevation MOA</span><input type="number" id="qE" step="0.25"></label>
+        <label class="field"><span class="lbl">Your wind MOA</span><input type="number" id="qW" step="0.25"></label>
+      </div>
+      <div class="row"><button class="btn primary" id="qCheck">Check</button><button class="btn" id="qNew">New scenario</button><button class="btn" id="qOpen">Open in Shoot</button></div>
+      <div class="result" id="qOut" hidden></div>
+    </div>
+    <div class="panel" id="lessons"></div>
+  </section>
+</div>
+
+<script>
+// ===== Ballistics engine: point-mass, G1/G7, real air density =====
+const BAL = (() => {
+  const TABLES = {"G1": [[0.0, 0.2629], [0.05, 0.2558], [0.1, 0.2487], [0.15, 0.2413], [0.2, 0.2344], [0.25, 0.2278], [0.3, 0.2214], [0.35, 0.2155], [0.4, 0.2104], [0.45, 0.2061], [0.5, 0.2032], [0.55, 0.202], [0.6, 0.2034], [0.7, 0.2165], [0.725, 0.223], [0.75, 0.2313], [0.775, 0.2417], [0.8, 0.2546], [0.825, 0.2706], [0.85, 0.2901], [0.875, 0.3136], [0.9, 0.3415], [0.925, 0.3734], [0.95, 0.4084], [0.975, 0.4448], [1.0, 0.4805], [1.025, 0.5136], [1.05, 0.5427], [1.075, 0.5677], [1.1, 0.5883], [1.125, 0.6053], [1.15, 0.6191], [1.2, 0.6393], [1.25, 0.6518], [1.3, 0.6589], [1.35, 0.6621], [1.4, 0.6625], [1.45, 0.6607], [1.5, 0.6573], [1.55, 0.6528], [1.6, 0.6474], [1.65, 0.6413], [1.7, 0.6347], [1.75, 0.628], [1.8, 0.621], [1.85, 0.6141], [1.9, 0.6072], [1.95, 0.6003], [2.0, 0.5934], [2.05, 0.5867], [2.1, 0.5804], [2.15, 0.5743], [2.2, 0.5685], [2.25, 0.563], [2.3, 0.5577], [2.35, 0.5527], [2.4, 0.5481], [2.45, 0.5438], [2.5, 0.5397], [2.6, 0.5325], [2.7, 0.5264], [2.8, 0.5211], [2.9, 0.5168], [3.0, 0.5133], [3.1, 0.5105], [3.2, 0.5084], [3.3, 0.5067], [3.4, 0.5054], [3.5, 0.504], [3.6, 0.503], [3.7, 0.5022], [3.8, 0.5016], [3.9, 0.501], [4.0, 0.5006], [4.2, 0.4998], [4.4, 0.4995], [4.6, 0.4992], [4.8, 0.499], [5.0, 0.4988]], "G7": [[0.0, 0.1198], [0.05, 0.1197], [0.1, 0.1196], [0.15, 0.1194], [0.2, 0.1193], [0.25, 0.1194], [0.3, 0.1194], [0.35, 0.1194], [0.4, 0.1193], [0.45, 0.1193], [0.5, 0.1194], [0.55, 0.1193], [0.6, 0.1194], [0.65, 0.1197], [0.7, 0.1202], [0.725, 0.1207], [0.75, 0.1215], [0.775, 0.1226], [0.8, 0.1242], [0.825, 0.1266], [0.85, 0.1306], [0.875, 0.1368], [0.9, 0.1464], [0.925, 0.166], [0.95, 0.2054], [0.975, 0.2993], [1.0, 0.3803], [1.025, 0.4015], [1.05, 0.4043], [1.075, 0.4034], [1.1, 0.4014], [1.125, 0.3987], [1.15, 0.3955], [1.2, 0.3884], [1.25, 0.381], [1.3, 0.3732], [1.35, 0.3657], [1.4, 0.358], [1.5, 0.344], [1.55, 0.3376], [1.6, 0.3315], [1.65, 0.326], [1.7, 0.3209], [1.75, 0.316], [1.8, 0.3117], [1.85, 0.3078], [1.9, 0.3042], [1.95, 0.301], [2.0, 0.298], [2.05, 0.2951], [2.1, 0.2922], [2.15, 0.2892], [2.2, 0.2864], [2.25, 0.2835], [2.3, 0.2807], [2.35, 0.2779], [2.4, 0.2752], [2.45, 0.2725], [2.5, 0.2697], [2.55, 0.267], [2.6, 0.2643], [2.65, 0.2615], [2.7, 0.2588], [2.75, 0.2561], [2.8, 0.2533], [2.85, 0.2506], [2.9, 0.2479], [2.95, 0.2451], [3.0, 0.2424], [3.1, 0.2368], [3.2, 0.2313], [3.3, 0.2258], [3.4, 0.2205], [3.5, 0.2154], [3.6, 0.2106], [3.7, 0.206], [3.8, 0.2017], [3.9, 0.1975], [4.0, 0.1935], [4.2, 0.1861], [4.4, 0.1793], [4.6, 0.173], [4.8, 0.1672], [5.0, 0.1618]]};
+  function cd(model, M) {
+    const t = TABLES[model];
+    if (M <= t[0][0]) return t[0][1];
+    if (M >= t[t.length - 1][0]) return t[t.length - 1][1];
+    let lo = 0, hi = t.length - 1;
+    while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (t[mid][0] > M) hi = mid; else lo = mid; }
+    const f = (M - t[lo][0]) / (t[hi][0] - t[lo][0]);
+    return t[lo][1] + f * (t[hi][1] - t[lo][1]);
+  }
+  function stdPressure(altFt) { return 29.92 * Math.pow(1 - 6.8753e-6 * altFt, 5.2559); }
+  function atmo(a) {
+    const Tc = (a.tempF - 32) * 5 / 9, TK = Tc + 273.15;
+    const PinHg = a.pressure > 0 ? a.pressure : stdPressure(a.altFt);
+    const P = PinHg * 3386.39;
+    const es = 610.78 * Math.pow(10, 7.5 * Tc / (Tc + 237.3));
+    const pv = (a.rh / 100) * es;
+    const rho = (P - pv) / (287.058 * TK) + pv / (461.495 * TK);
+    const sos = 331.3 * Math.sqrt(1 + Tc / 273.15);
+    return { rho, sos, PinHg, TK, Tc };
+  }
+  const YD = 0.9144, FPS = 0.3048, IN = 0.0254;
+
+  // Fly one shot. barrel = bore angle above line of sight (rad).
+  // Returns samples at each requested range (yards, along line of sight).
+  function fly(p, barrel, env, ranges) {
+    const at = atmo(env);
+    const bcSI = p.bc * 703.0696;
+    const k = at.rho * Math.PI / (8 * bcSI);
+    const L = (env.angle || 0) * Math.PI / 180;
+    const th = barrel + L;
+    const v0 = p.mv * FPS;
+    let vx = v0 * Math.cos(th), vy = v0 * Math.sin(th), vz = 0;
+    const sh = p.sightHeight * IN;
+    let x = sh * Math.sin(L), y = -sh * Math.cos(L), z = 0, t = 0;
+    const cr = (env.windClock || 0) * Math.PI / 6;
+    const ws = (env.windMph || 0) * 0.44704;
+    const wx = -ws * Math.cos(cr), wz = -ws * Math.sin(cr);
+    const cosL = Math.cos(L), sinL = Math.sin(L);
+    const out = [];
+    let ri = 0;
+    const targets = ranges.map(r => r * YD);
+    let prev = null;
+    const dt = 0.0004;
+    while (ri < targets.length && t < 6) {
+      const d = x * cosL + y * sinL;
+      const h = -x * sinL + y * cosL;
+      const v = Math.hypot(vx, vy, vz);
+      const cur = { d, h, z, t, v };
+      while (prev && ri < targets.length && d >= targets[ri]) {
+        const f = (targets[ri] - prev.d) / (d - prev.d);
+        const lerp = (a, b) => a + f * (b - a);
+        out.push({ r: ranges[ri], h: lerp(prev.h, h), z: lerp(prev.z, z), t: lerp(prev.t, t), v: lerp(prev.v, v) });
+        ri++;
+      }
+      if (v < 150) break;
+      prev = cur;
+      const rx = vx - wx, ry = vy, rz = vz - wz;
+      const rs = Math.hypot(rx, ry, rz);
+      // Air thins and cools as the bullet climbs (or thickens as it drops): standard lapse rate from the shooter's air.
+      const Tl = at.TK - 0.0065 * y, tr = Tl / at.TK;
+      const dens = Math.pow(tr, 4.2559), sosL = at.sos * Math.sqrt(tr);
+      const a = k * dens * rs * cd(p.model, rs / sosL);
+      // semi-implicit Euler
+      vx -= a * rx * dt; vy -= (a * ry + 9.80665) * dt; vz -= a * rz * dt;
+      x += vx * dt; y += vy * dt; z += vz * dt; t += dt;
+    }
+    return { pts: out, at };
+  }
+
+  function solveZero(p, zeroEnv) {
+    let lo = -0.01, hi = 0.03;
+    const env = { ...zeroEnv, angle: 0, windMph: 0 };
+    for (let i = 0; i < 40; i++) {
+      const mid = (lo + hi) / 2;
+      const r = fly(p, mid, env, [p.zeroRange]).pts[0];
+      if (!r || r.h < 0) lo = mid; else hi = mid;
+    }
+    return (lo + hi) / 2;
+  }
+
+  // Miller stability + Litz spin drift approximation (inches, right twist = right)
+  function spinDrift(p, env, tof) {
+    if (!p.length || !p.twist) return 0;
+    const d = p.diameter || 0.308;
+    const tc = p.twist / d, l = p.length / d;
+    const at = atmo(env);
+    let sg = 30 * p.weight / (tc * tc * d * d * d * l * (1 + l * l));
+    sg *= Math.cbrt(p.mv / 2800);
+    sg *= ((env.tempF + 460) / 519) * (29.92 / at.PinHg);
+    return 1.25 * (sg + 1.2) * Math.pow(tof, 1.83);
+  }
+
+  // o.zeroWith: the load the scope was zeroed with (if different). o.poiUp / o.poiRight: measured
+  // impact of THIS load at the zero range (inches) with the scope set for the zero load; when given,
+  // it replaces the physics-only estimate (it already includes it).
+  function solve(p, zeroEnv, env, ranges, o) {
+    o = o || {};
+    const num = v => typeof v === "number" && isFinite(v);
+    const measured = num(o.poiUp) || num(o.poiRight);
+    const zp = (o.zeroWith && !measured) ? { ...o.zeroWith, sightHeight: p.sightHeight, zeroRange: p.zeroRange } : p;
+    const barrel = solveZero(zp, zeroEnv);
+    const up = num(o.poiUp) ? o.poiUp : 0, rt = num(o.poiRight) ? o.poiRight : 0, zr = p.zeroRange;
+    const res = fly(p, barrel, env, ranges);
+    return res.pts.map(s => {
+      const inches = s.h / IN + (measured ? up * s.r / zr : 0);
+      const sd = env.spin === false ? 0 : spinDrift(p, env, s.t);
+      const wind = s.z / IN + sd + (measured ? rt * s.r / zr : 0);
+      const vfps = s.v / FPS;
+      return {
+        r: s.r, dropIn: inches, windIn: wind, spinIn: sd, tof: s.t, v: vfps,
+        e: p.weight * vfps * vfps / 450400,
+        moa: s.r ? inches / (1.04720 * s.r / 100) : 0,
+        mil: s.r ? inches / (3.6 * s.r / 100) : 0,
+        wMoa: s.r ? wind / (1.04720 * s.r / 100) : 0,
+        wMil: s.r ? wind / (3.6 * s.r / 100) : 0,
+      };
+    });
+  }
+
+  // Maximum point-blank range for a vital zone of given radius (in).
+  function mpbr(p, env, radius) {
+    const ranges = []; for (let r = 5; r <= 600; r += 5) ranges.push(r);
+    let best = null;
+    for (let z = 100; z <= 350; z += 5) {
+      const q = { ...p, zeroRange: z };
+      const pts = solve(q, env, { ...env, windMph: 0, angle: 0, spin: false }, ranges);
+      const peak = Math.max(...pts.map(s => s.dropIn));
+      if (peak > radius) break;
+      let far = 0, near = 0;
+      for (const s of pts) { if (s.dropIn >= -radius) far = s.r; else break; }
+      if (!best || far > best.far) best = { zero: z, far, peak };
+    }
+    return best;
+  }
+
+  return { solve, mpbr, atmo, stdPressure, cd };
+})();
+
+</script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const DEFAULTS = {
+  version: 2,
+  load: "aw180",
+  loads: {
+    aw180: { name: "Hornady American Whitetail 180 gr SP (#81084)", model: "G1", bc: 0.433, mv: 2700, weight: 180, length: 0, minExp: 1800,
+      note: "Your hunting load. 2,700 fps is Hornady's 24\" test-barrel velocity; your 22\" BLR is likely a bit slower. Hornady doesn't publish a BC for this load, so 0.433 is back-calculated from Hornady's own velocity table (it reproduces the box drops within 0.1\"). 1,800 fps is a conservative expansion floor for cup-and-core soft points. Confirm your zero with these: you sighted in with the 150s." },
+    aw150: { name: "Hornady American Whitetail 150 gr SP (#8108)", model: "G1", bc: 0.345, mv: 2910, weight: 150, length: 0, minExp: 1800,
+      note: "The load you sighted in with at 100 yd. BC back-calculated from Hornady's velocity table; 2,910 fps is from a 24\" test barrel." },
+    ablr: { name: "168 gr AccuBond LR (handload)", model: "G1", bc: 0.525, mv: 2750, weight: 168, length: 1.39, minExp: 1300,
+      note: "Your H4350 load (54.0\u201357.0 gr in your notes, COL 3.330\u20133.340\"). 2,750 fps is a placeholder until you chronograph it from the BLR. Nosler lists this bullet at G1 0.525." },
+    ta: { name: "175 gr Terminal Ascent (Federal)", model: "G7", bc: 0.258, mv: 2730, weight: 175, length: 1.40, minExp: 1400,
+      note: "Federal's 2,730 fps comes from a 24\" test barrel; your 22\" BLR will likely run somewhat slower. Bullet length and expansion threshold here are estimates." }
+  },
+  rifle: { sightHeight: 1.65, zeroRange: 100, twist: 10 },
+  zeroEnv: { altFt: 6035, tempF: 60, rh: 30, pressure: 0 },
+  env: { altFt: 9000, tempF: 30, rh: 45, pressure: 0, angle: 0, windMph: 8, windClock: 3 },
+  zeroLoad: "aw150",
+  range: 300, units: "MOA", mode: "dial", mag: 15, vital: 4
+};
+let S;
+try { S = JSON.parse(localStorage.getItem("blr-ballistics") || "null"); } catch (e) { S = null; }
+if (!S || !S.loads) S = JSON.parse(JSON.stringify(DEFAULTS));
+else if (S.version !== DEFAULTS.version) {
+  // Bring in the new loads and 100 yd zero; keep any velocity he trued on the older loads.
+  const old = S.loads;
+  S = { ...JSON.parse(JSON.stringify(DEFAULTS)), env: S.env || DEFAULTS.env, units: S.units || "MOA", mode: S.mode || "dial", mag: S.mag || 15 };
+  ["ablr", "ta"].forEach(k => { if (old[k] && old[k].mv) S.loads[k].mv = old[k].mv; });
+}
+// Favorites + library ids for loads saved before these existed.
+function migrateLoads(st) {
+  const legacy = { aw180: "Hornady:81084", aw150: "Hornady:8108", ta: "Federal:P3006TA1" };
+  Object.entries(st.loads || {}).forEach(([k, L]) => {
+    if (L.fav === undefined) L.fav = true;
+    if (!L.libId) { if (legacy[k]) L.libId = legacy[k]; else if (/^h\d/.test(k)) L.libId = "Hornady:" + k.slice(1); }
+  });
+  return st;
+}
+migrateLoads(S);
+let DB = null, UID = null, dbTimer = null;
+const stateDoc = () => DB.doc("data/users/" + UID + "/state");
+const save = () => {
+  try { localStorage.setItem("blr-ballistics", JSON.stringify(S)); } catch (e) {}
+  if (DB && UID) { clearTimeout(dbTimer); dbTimer = setTimeout(() => { stateDoc().set(JSON.parse(JSON.stringify(S))).catch(() => {}); }, 900); }
+};
+// Account storage: loads and settings follow Lance to any device.
+(async () => {
+  if (!window.claude || !window.claude.use) return;
+  const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  if (!db || !user) return;
+  const id = await user.id(); if (!id) return;
+  DB = db; UID = id;
+  try {
+    const snap = await stateDoc().get();
+    const d = snap.exists ? snap.data() : null;
+    if (d && d.loads && d.version === DEFAULTS.version && Object.keys(d.loads).length) {
+      S = migrateLoads(JSON.parse(JSON.stringify(d))); if (!S.loads[S.load]) S.load = Object.keys(S.loads)[0];
+      try { localStorage.setItem("blr-ballistics", JSON.stringify(S)); } catch (e) {}
+      render();
+    } else {
+      await stateDoc().set(JSON.parse(JSON.stringify(S)));
+    }
+  } catch (e) { DB = null; }
+})();
+
+const PRESETS = [
+  { name: "Elk timber 9,000 ft", altFt: 9000, tempF: 30, rh: 45 },
+  { name: "Springs range 6,035 ft", altFt: 6035, tempF: 60, rh: 30 },
+  { name: "Plains antelope 5,000 ft", altFt: 5000, tempF: 30, rh: 50 },
+  { name: "High basin 11,000 ft", altFt: 11000, tempF: 15, rh: 40 },
+  { name: "Sea level 59°F", altFt: 0, tempF: 59, rh: 0 },
+];
+
+const HELP = {
+  range: "The single biggest input. A 25-yard ranging error at 400 yd moves impact several inches. Laser-range the animal, not the brush in front of it.",
+  wind: "Tap the clock to say where the wind comes from, with you facing the target at 12. Wind from 3 or 9 o'clock is full value; from 1–2 or 10–11 it's about half to most; from 12 or 6 it barely pushes the bullet sideways.",
+  angle: "Up- or downhill, gravity only acts across the horizontal part of the distance, so the bullet hits high if you hold for the full line-of-sight range. Steep angles matter; under about 15° it's small.",
+  air: "Thin air = less drag = less drop. At elk elevation your bullet flies flatter than the same shot at sea level. Cold air is denser and adds drop. The presets cover your usual country.",
+  pressure: "Leave blank and the app estimates pressure from altitude. If you have a Kestrel or barometer, enter STATION pressure (the actual reading), not the weather-report number, which is corrected to sea level.",
+  sfp: "Your Impact-29 reticle is second focal plane: the marks only equal their printed MOA at 15x. At 7.5x each mark is worth 2 MOA, so you hold half as many marks. This slider shows you which mark to use at your current power.",
+  mpbr: "Maximum point-blank range: the zero that keeps the bullet inside the vital circle from the muzzle out as far as possible, so you hold dead-on without dialing. An elk's heart-lung zone is roughly 8–10\" across; deer and antelope closer to 6–8\".",
+  cds: "Leupold's Custom Dial System will laser-engrave yardages on your elevation dial for a specific load and altitude. This preview shows where each yardage would fall for your current load and air. Leupold builds the real one from their own data.",
+  mv: "Muzzle velocity drives everything downrange. Box and manual numbers are from test barrels; your rifle is the truth. A chronograph session (10 shots) is the best upgrade this app can get.",
+  bc: "Ballistic coefficient = how well the bullet cuts air, relative to a reference shape. G1 is an old flat-base shape; G7 matches modern boat-tail long-range bullets better, so G7 numbers stay accurate over more of the flight. Use whichever the maker publishes for your bullet.",
+  exp: "Below this impact speed the bullet may not open reliably. Nosler rates the AccuBond LR down to 1,300 fps. This app flags shots where the bullet arrives slower.",
+  sh: "Center of the scope to center of the bore. Measure: (scope tube diameter ÷ 2) + (bolt or barrel diameter ÷ 2) + gap between them. It mostly affects close-range numbers.",
+  zero: "The distance where bullet and crosshair meet when you sighted in, and the load you used. Change these whenever you re-zero. The Dope card's point-blank section shows whether a longer zero would suit your hunting better.",
+  poi: "Leave the scope set for the load you zeroed with. Shoot this load at your zero distance, measure from your aim point to the center of the group, and enter it here. The app then uses your rifle's real shift for this load at every distance, so you can switch loads without touching the turret.",
+  true: "After you shoot at distance, enter what you actually had to dial to hit. The app finds the muzzle velocity that makes its prediction match reality, which corrects for your barrel, your chamber, and any BC error at once."
+};
+
+// ---------- model ----------
+const load = () => S.loads[S.load];
+const proj = () => ({ ...load(), ...S.rifle, diameter: 0.308 });
+const envNow = (o = {}) => ({ ...S.env, ...o });
+const zEnv = () => S.zeroEnv;
+// Energy guidelines by animal (common hunting rules of thumb, not hard limits)
+const SPECIES = {
+  pronghorn: { name: "Pronghorn", plural: "pronghorn", e: 1000 },
+  deer: { name: "Deer", plural: "mule deer and whitetail", e: 1000 },
+  elk: { name: "Elk", plural: "elk", e: 1500 },
+  moose: { name: "Moose", plural: "moose", e: 2000 }
+};
+const animal = () => SPECIES[S.species] || SPECIES.elk;
+// Zero-load awareness: if the scope was zeroed with another load, fly this one with that scope setting,
+// or use the measured impact at the zero range once Lance enters it.
+const zeroOpts = () => {
+  const zl = S.zeroLoad && S.zeroLoad !== S.load && S.loads[S.zeroLoad];
+  if (!zl) return {};
+  const L = load();
+  return { zeroWith: { ...zl, ...S.rifle, diameter: 0.308 }, poiUp: L.poiUp, poiRight: L.poiRight };
+};
+const isMeasured = () => typeof load().poiUp === "number" || typeof load().poiRight === "number";
+const solveAt = (ranges, envO = {}, pO = {}, zO = {}) =>
+  BAL.solve({ ...proj(), ...pO }, { ...zEnv(), ...zO }, envNow(envO), ranges, zeroOpts());
+const ang = (s, which) => S.units === "MOA" ? (which === "w" ? s.wMoa : s.moa) : (which === "w" ? s.wMil : s.mil);
+const fmt = (v, d = 1) => (Math.round(v * 10 ** d) / 10 ** d).toFixed(d);
+const unit = () => S.units;
+const toAng = (inches, r) => S.units === "MOA" ? inches / (1.0472 * r / 100) : inches / (3.6 * r / 100);
+const clockNames = ["12","1","2","3","4","5","6","7","8","9","10","11"];
+
+// ---------- tabs ----------
+document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("click", () => {
+  document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
+  document.querySelectorAll("section.tab").forEach(s => s.hidden = s.id !== "tab-" + b.dataset.tab);
+  render();
+}));
+function goTab(t) { document.querySelector(`nav.tabs button[data-tab="${t}"]`).click(); window.scrollTo({ top: 0 }); }
+
+// ---------- help bubbles ----------
+document.querySelectorAll(".help").forEach(h => h.textContent = HELP[h.dataset.for] || "");
+document.querySelectorAll(".q").forEach(q => q.addEventListener("click", e => {
+  e.preventDefault();
+  const h = document.querySelector(`.help[data-for="${q.dataset.h}"]`);
+  h.hidden = !h.hidden; q.setAttribute("aria-expanded", !h.hidden);
+}));
+
+// ---------- inputs ----------
+function bindNum(id, get, set) {
+  const el = $(id);
+  el.addEventListener("input", () => { const v = parseFloat(el.value); set(isNaN(v) ? 0 : v); save(); render(true); });
+  el._get = get;
+}
+bindNum("range", () => S.range, v => S.range = v);
+bindNum("wind", () => S.env.windMph, v => S.env.windMph = v);
+bindNum("angle", () => S.env.angle, v => S.env.angle = v);
+bindNum("mag", () => S.mag, v => S.mag = v);
+["altFt", "tempF", "rh", "pressure"].forEach(k => bindNum(k, () => S.env[k], v => S.env[k] = v));
+["mv", "bc", "weight", "length", "minExp"].forEach(k => bindNum(k, () => load()[k], v => load()[k] = v));
+["sightHeight", "twist"].forEach(k => bindNum(k, () => S.rifle[k], v => S.rifle[k] = v));
+// Changing how the rifle was zeroed invalidates measured offsets (they were taken against the old zero).
+const clearOffsets = why => {
+  let n = 0; Object.values(S.loads).forEach(L => { if ("poiUp" in L || "poiRight" in L) n++; delete L.poiUp; delete L.poiRight; });
+  $("zNote").textContent = n ? `${why} Measured offsets for other loads were cleared, since they were taken against the old zero.` : why;
+};
+// Zero changes are staged: nothing applies until "Set zero" is tapped.
+let zDirty = false;
+const zFields = ["zeroRange", "zLoad", "zAlt", "zTemp"];
+const zPending = () => ({ range: parseFloat($("zeroRange").value), load: $("zLoad").value, alt: parseFloat($("zAlt").value), temp: parseFloat($("zTemp").value) });
+function zMark() {
+  const p = zPending();
+  zDirty = p.range !== S.rifle.zeroRange || p.load !== S.zeroLoad || p.alt !== S.zeroEnv.altFt || p.temp !== S.zeroEnv.tempF;
+  $("zSet").classList.toggle("primary", zDirty); $("zSet").disabled = !zDirty;
+  $("zNote").textContent = zDirty ? "Changes aren't used until you tap Set zero." : "";
+}
+zFields.forEach(id => { $(id).addEventListener("input", zMark); $(id).addEventListener("change", zMark); });
+$("zSet").onclick = () => {
+  const p = zPending();
+  if (!(p.range >= 25 && p.range <= 600)) { $("zNote").textContent = "Zero range must be between 25 and 600 yards."; return; }
+  if (!isFinite(p.alt) || !isFinite(p.temp)) { $("zNote").textContent = "Enter the altitude and temperature where you zeroed."; return; }
+  const changedZero = p.range !== S.rifle.zeroRange || p.load !== S.zeroLoad;
+  S.rifle.zeroRange = p.range; S.zeroLoad = p.load; S.zeroEnv.altFt = p.alt; S.zeroEnv.tempF = p.temp;
+  const msg = `Zero set: ${p.range} yd with ${S.loads[p.load].name}, at ${p.alt.toLocaleString()} ft and ${p.temp}°F.`;
+  zDirty = false;
+  if (changedZero) clearOffsets(msg); else $("zNote").textContent = msg;
+  const shown = $("zNote").textContent || msg;
+  save(); render(); zMark(); $("zNote").textContent = shown;
+};
+const poiInput = (id, key) => $(id).addEventListener("input", () => {
+  const v = parseFloat($(id).value);
+  if (isNaN(v)) delete load()[key]; else load()[key] = v;
+  save(); render(true);
+});
+poiInput("poiUp", "poiUp"); poiInput("poiRight", "poiRight");
+$("poiClear").onclick = () => { delete load().poiUp; delete load().poiRight; $("poiUp").value = ""; $("poiRight").value = ""; save(); render(); };
+$("model").addEventListener("change", e => { load().model = e.target.value; save(); render(); });
+$("rDown").onclick = () => { S.range = Math.max(25, S.range - 25); save(); render(); };
+$("rUp").onclick = () => { S.range = Math.min(1000, S.range + 25); save(); render(); };
+$("sunBtn").onclick = () => { S.sun = !S.sun; save(); render(); };
+$("noWind").onclick = () => { S.env.windMph = 0; save(); render(); };
+$("mDial").onclick = () => { S.mode = "dial"; save(); render(); };
+$("mHold").onclick = () => { S.mode = "hold"; save(); render(); };
+$("uMOA").onclick = () => { S.units = "MOA"; save(); render(); };
+$("uMIL").onclick = () => { S.units = "MIL"; save(); render(); };
+// ---------- backup / restore ----------
+const bkText = () => JSON.stringify({ app: "Kohl Ballistics", saved: new Date().toISOString(), state: S });
+$("bkSave").hidden = !!window.claude; // downloads don't work inside the online viewer; Copy does
+$("bkSave").onclick = () => {
+  try {
+    const url = URL.createObjectURL(new Blob([bkText()], { type: "application/json" }));
+    const a = document.createElement("a"); a.href = url; a.download = `kohl-ballistics-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+    $("bkNote").textContent = "Backup saved to your Downloads.";
+  } catch (e) { $("bkNote").textContent = "Couldn't save a file here. Use Copy backup instead."; }
+};
+$("bkCopy").onclick = async () => {
+  const t = bkText();
+  try { await navigator.clipboard.writeText(t); $("bkNote").textContent = "Backup copied. Paste it into a note or message to keep it."; }
+  catch (e) { $("bkText").value = t; $("bkText").closest("details").open = true; $("bkText").select(); $("bkNote").textContent = "Couldn't copy automatically. The backup is selected in the box below; copy it from there."; }
+};
+let bkPending = null;
+function bkLoad(text) {
+  let d; try { d = JSON.parse(text); } catch (e) { $("bkNote").textContent = "That isn't a Kohl Ballistics backup."; return; }
+  const st = d && d.state ? d.state : d;
+  if (!st || !st.loads || typeof st.loads !== "object" || !Object.keys(st.loads).length) { $("bkNote").textContent = "That backup has no loads in it."; return; }
+  bkPending = st;
+  $("bkNote").textContent = `Backup has ${Object.keys(st.loads).length} loads${d.saved ? ` (saved ${d.saved.slice(0, 10)})` : ""}. Tap Restore again to replace what's on this device.`;
+  $("bkPaste").textContent = "Restore (tap to confirm)"; $("bkPaste").classList.add("primary");
+  $("bkText").closest("details").open = true;
+}
+$("bkFile").addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = () => bkLoad(String(r.result)); r.readAsText(f); e.target.value = ""; });
+$("bkPaste").onclick = () => {
+  if (!bkPending) { bkLoad($("bkText").value.trim()); return; }
+  S = migrateLoads({ ...JSON.parse(JSON.stringify(DEFAULTS)), ...bkPending, version: DEFAULTS.version });
+  if (!S.loads[S.load]) S.load = Object.keys(S.loads)[0];
+  bkPending = null; $("bkPaste").textContent = "Restore pasted backup"; $("bkPaste").classList.remove("primary"); $("bkText").value = "";
+  save(); render(); $("bkNote").textContent = `Restored ${Object.keys(S.loads).length} loads.`;
+};
+$("resetAll").onclick = () => {
+  if ($("resetAll").dataset.armed) { S = JSON.parse(JSON.stringify(DEFAULTS)); save(); $("resetAll").textContent = "Reset to defaults"; delete $("resetAll").dataset.armed; $("resetNote").textContent = "Defaults restored."; render(); }
+  else { $("resetAll").dataset.armed = 1; $("resetAll").textContent = "Tap again to confirm"; $("resetNote").textContent = "This clears your edited loads and zero."; }
+};
+
+// presets
+$("presets").innerHTML = PRESETS.map((p, i) => `<button class="chip" data-i="${i}" aria-pressed="false">${p.name}</button>`).join("");
+$("presets").querySelectorAll(".chip").forEach(c => c.onclick = () => {
+  const p = PRESETS[c.dataset.i]; Object.assign(S.env, { altFt: p.altFt, tempF: p.tempF, rh: p.rh, pressure: 0 }); save(); render();
+});
+
+// wind clock
+function drawClock() {
+  let s = `<circle r="66" fill="var(--sunk)" stroke="var(--line)"/>`;
+  s += `<path d="M0 10 L-7 22 L7 22 Z" fill="var(--muted)"/><text y="38" text-anchor="middle" font-size="9" fill="var(--muted)">you</text>`;
+  s += `<line x1="0" y1="0" x2="0" y2="-40" stroke="var(--line)" stroke-dasharray="3 3"/><text y="-44" text-anchor="middle" font-size="8" fill="var(--muted)">target</text>`;
+  for (let i = 0; i < 12; i++) {
+    const a = i * Math.PI / 6, x = 56 * Math.sin(a), y = -56 * Math.cos(a), on = i === S.env.windClock;
+    s += `<g class="ck" data-i="${i}" style="cursor:pointer" tabindex="0" role="button" aria-label="Wind from ${clockNames[i]} o'clock" aria-pressed="${on}">
+      <circle cx="${x}" cy="${y}" r="11" fill="${on ? "var(--accent)" : "var(--surface)"}" stroke="var(--line)"/>
+      <text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="600" fill="${on ? "var(--accent-ink)" : "var(--ink)"}">${clockNames[i]}</text></g>`;
+  }
+  const a = S.env.windClock * Math.PI / 6;
+  if (S.env.windMph > 0) {
+    const x1 = 42 * Math.sin(a), y1 = -42 * Math.cos(a), x2 = 14 * Math.sin(a), y2 = -14 * Math.cos(a);
+    s += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="var(--accent)" stroke-width="3"/>`;
+    const px = -Math.cos(a), py = -Math.sin(a), bx = x2 + 7 * Math.sin(a), by = y2 - 7 * Math.cos(a);
+    s += `<path d="M${x2} ${y2} L${bx + 5 * px} ${by + 5 * py} L${bx - 5 * px} ${by - 5 * py} Z" fill="var(--accent)"/>`;
+  }
+  $("clock").innerHTML = s;
+  $("clock").querySelectorAll(".ck").forEach(g => {
+    const pick = () => { S.env.windClock = +g.dataset.i; save(); render(); };
+    g.addEventListener("click", pick); g.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(); } });
+  });
+}
+
+// Hold picture: a plain MOA grid (not a copy of any maker's reticle). 1 MOA = 5 px, true at 15x.
+function drawReticle(elevMoa, windMoa, showHold) {
+  const k = 5, mag = S.mode === "hold" ? S.mag : 15, px = m => m * k;
+  const sun = !!S.sun, bg = sun ? "#FFFFFF" : "var(--sunk)", ink = sun ? "#000000" : "var(--ink)", faint = sun ? "#9A9A9A" : "var(--line)",
+        lab = sun ? "#000000" : "var(--muted)", hot = sun ? "#D10000" : "var(--accent)", w = sun ? 1.6 : 1;
+  let s = `<circle r="160" fill="${bg}" stroke="${ink}" stroke-width="${sun ? 3 : 2}"/>`;
+  // faint 2-MOA grid in the lower half for holds
+  // small crosses at each 2-MOA corner below the wind line
+  const a = sun ? 1.25 : 1, cw = sun ? .9 : .6, cc = sun ? "#000000" : "var(--muted)";
+  for (let y = 2; y <= 28; y += 2) for (let x = -18; x <= 18; x += 2) if (x && Math.hypot(px(x), px(y)) + a <= 155)
+    s += `<path d="M${px(x) - a} ${px(y)}H${px(x) + a}M${px(x)} ${px(y) - a}V${px(y) + a}" stroke="${cc}" stroke-width="${cw}" stroke-opacity=".9" fill="none"/>`;
+  s += `<line x1="-160" y1="0" x2="160" y2="0" stroke="${ink}" stroke-width="${1.4 * w}"/><line x1="0" y1="-160" x2="0" y2="160" stroke="${ink}" stroke-width="${1.4 * w}"/>`;
+  for (let i = 1; i <= 18; i++) {
+    const big = i % 2 === 0, hl = big ? 5 : 2.5, fs = sun ? 9 : 8.5, up = i % 4 === 2; // stagger: 2,6,10 above; 4,8,12 below
+    s += `<line x1="${px(i)}" y1="-${hl}" x2="${px(i)}" y2="${hl}" stroke="${ink}" stroke-width="${.8 * w}"/><line x1="-${px(i)}" y1="-${hl}" x2="-${px(i)}" y2="${hl}" stroke="${ink}" stroke-width="${.8 * w}"/>`;
+    if (big && i !== 2 && i !== 6) { const ty = up ? -8 : 15; s += `<text x="${px(i)}" y="${ty}" font-size="${fs}" font-weight="${sun ? 700 : 600}" text-anchor="middle" fill="${lab}" stroke="${bg}" stroke-width="3" paint-order="stroke">${i}</text><text x="-${px(i)}" y="${ty}" font-size="${fs}" font-weight="${sun ? 700 : 600}" text-anchor="middle" fill="${lab}" stroke="${bg}" stroke-width="3" paint-order="stroke">${i}</text>`; }
+  }
+  for (let j = 1; j <= 29; j++) {
+    const big = j % 2 === 0, hl = big ? 5 : 2.5;
+    s += `<line x1="-${hl}" y1="${px(j)}" x2="${hl}" y2="${px(j)}" stroke="${ink}" stroke-width="${.8 * w}"/>`;
+    if (big && j !== 2 && j !== 6) { const right = j % 4 === 2; s += `<text x="${right ? 8 : -8}" y="${px(j) + 3}" font-size="${sun ? 9 : 8.5}" font-weight="${sun ? 700 : 600}" text-anchor="${right ? "start" : "end"}" fill="${lab}" stroke="${bg}" stroke-width="3" paint-order="stroke">${j}</text>`; } // stagger: 2,6,10… right; 4,8,12… left
+  }
+  if (showHold) {
+    const hx = Math.max(-150, Math.min(150, px(windMoa))), hy = Math.max(-150, Math.min(150, px(elevMoa)));
+    const clipped = Math.abs(windMoa) > 18 || elevMoa > 29;
+    // red ring exactly 2 MOA across (1 MOA = 5 px), measured to its outer edge; orange center dot
+    const ring = sun ? "#D10000" : "var(--bad)";
+    s += `<circle cx="${hx}" cy="${hy}" r="${sun ? 4 : 4.2}" fill="none" stroke="${ring}" stroke-width="${sun ? 2 : 1.6}"/><circle cx="${hx}" cy="${hy}" r="2.4" fill="${sun ? "#FF8A00" : "var(--dot)"}" stroke="#000000" stroke-width=".5"/>`;
+    if (clipped) s += `<text y="150" text-anchor="middle" font-size="10" font-weight="700" fill="${hot}">hold is past the marks</text>`;
+  } else s += `<circle cx="0" cy="0" r="2" fill="none" stroke="${hot}" stroke-width="1"/>`;
+  // magnification label
+  const per = 15 / mag, magTxt = mag === 15 ? "15x · marks = true MOA" : `${mag}x · 1 mark = ${per.toFixed(2)} MOA`;
+  s += `<rect x="-78" y="-150" width="156" height="18" rx="9" fill="${sun ? "#000000" : "var(--surface)"}" stroke="${ink}" stroke-width=".8"/>`;
+  s += `<text x="0" y="-137.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="${sun ? "#FFFFFF" : "var(--ink)"}">${magTxt}</text>`;
+  $("reticle").innerHTML = s;
+}
+
+// ---------- render ----------
+let lastSol;
+function render(fromInput) {
+  // sync inputs (skip focused element)
+  const act = document.activeElement;
+  document.querySelectorAll("input[type=number],input[type=range]").forEach(el => { if (el._get && el !== act) { const v = el._get(); el.value = v === 0 && el.id === "pressure" ? "" : v; } });
+  $("model").value = load().model;
+  $("rangeVal").textContent = S.range;
+  $("windVal").textContent = S.env.windMph;
+  $("angleVal").textContent = (S.env.angle > 0 ? "+" : "") + S.env.angle + "°";
+  $("magVal").textContent = S.mag + "x";
+  $("mDial").setAttribute("aria-pressed", S.mode === "dial"); $("mHold").setAttribute("aria-pressed", S.mode === "hold");
+  $("uMOA").setAttribute("aria-pressed", S.units === "MOA"); $("uMIL").setAttribute("aria-pressed", S.units === "MIL");
+  $("magRow").hidden = S.mode !== "hold";
+  $("sunBtn").setAttribute("aria-pressed", !!S.sun);
+  if (!SPECIES[S.species]) S.species = "elk";
+  $("species").innerHTML = Object.entries(SPECIES).map(([k, v]) => `<button class="chip" type="button" data-sp="${k}" aria-pressed="${k === S.species}">${v.name}</button>`).join("");
+  $("species").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.species = c.dataset.sp; save(); render(); });
+  $("noWind").setAttribute("aria-pressed", S.env.windMph === 0);
+  $("noWind").classList.toggle("primary", S.env.windMph === 0);
+  $("presets").querySelectorAll(".chip").forEach(c => { const p = PRESETS[c.dataset.i]; c.setAttribute("aria-pressed", p.altFt === S.env.altFt && p.tempF === S.env.tempF); });
+  $("loadChips").innerHTML = Object.entries(S.loads).filter(([k, l]) => l.fav !== false || k === S.load)
+    .map(([k, l]) => `<button class="chip" data-k="${k}" aria-pressed="${k === S.load}">${l.name.replace(/</g, "&lt;")}</button>`).join("");
+  $("favBtn").setAttribute("aria-pressed", load().fav !== false);
+  $("favBtn").textContent = load().fav !== false ? "★ Favorite" : "☆ Add to favorites";
+  $("loadChips").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.load = c.dataset.k; save(); render(); });
+  $("loadNote").textContent = load().note || "";
+  if (typeof renderLib === "function" && !$("tab-gear").hidden) renderLib();
+  if (!S.loads[S.zeroLoad]) S.zeroLoad = S.load;
+  const zPrev = $("zLoad").value;
+  $("zLoad").innerHTML = Object.entries(S.loads).map(([k, l]) => `<option value="${k}">${l.name.replace(/</g, "&lt;")}</option>`).join("");
+  if (zDirty && S.loads[zPrev]) $("zLoad").value = zPrev;
+  if (!zDirty) { $("zLoad").value = S.zeroLoad; $("zeroRange").value = S.rifle.zeroRange; $("zAlt").value = S.zeroEnv.altFt; $("zTemp").value = S.zeroEnv.tempF; }
+  const other = !!(S.zeroLoad && S.zeroLoad !== S.load && S.loads[S.zeroLoad]);
+  $("poiBox").hidden = !other;
+  if (other) {
+    const zr = S.rifle.zeroRange;
+    const pred = BAL.solve(proj(), zEnv(), { ...zEnv(), angle: 0, windMph: 0, spin: false }, [zr], { zeroWith: { ...S.loads[S.zeroLoad], ...S.rifle, diameter: 0.308 } })[0];
+    $("poiPred").textContent = `With your scope set for the ${S.loads[S.zeroLoad].name}, physics alone puts this load ${fmt(Math.abs(pred.dropIn), 1)}" ${pred.dropIn < 0 ? "low" : "high"} at ${zr} yd. Your rifle may add its own shift. Shoot a 3-shot group at ${zr} yd and enter where its center landed.`;
+    if (document.activeElement !== $("poiUp")) $("poiUp").value = typeof load().poiUp === "number" ? load().poiUp : "";
+    if (document.activeElement !== $("poiRight")) $("poiRight").value = typeof load().poiRight === "number" ? load().poiRight : "";
+  }
+  $("hdrSub").textContent = load().name;
+  drawClock();
+
+  const cr = S.env.windClock, full = Math.abs(Math.sin(cr * Math.PI / 6));
+  $("windDesc").textContent = S.env.windMph === 0 ? "No wind." :
+    `From ${clockNames[cr]} o'clock · ${full > 0.95 ? "full value" : full > 0.6 ? "about " + Math.round(full * 100) + "% value" : full > 0.1 ? "about half value" : "head/tail wind, almost no drift"}`;
+
+  const at = BAL.atmo(S.env), at0 = BAL.atmo({ altFt: 0, tempF: 59, rh: 0, pressure: 29.92 });
+  $("airNote").textContent = `Air density ${Math.round(at.rho / at0.rho * 100)}% of sea level · pressure ≈ ${fmt(at.PinHg, 2)} inHg · speed of sound ${Math.round(at.sos / 0.3048)} fps`;
+
+  const sol = solveAt([S.range])[0]; lastSol = sol;
+  const L = load();
+  const u = unit();
+  if (!sol) { $("callElev").textContent = "Out of range"; return; }
+  const elev = -ang(sol, "e"); // + = need to go up
+  const wHold = -ang(sol, "w"); // + = hold right
+  const elevMoa = -sol.moa, wMoa = -sol.wMoa;
+  const clickVal = u === "MOA" ? 0.25 : 0.1;
+
+  if (S.mode === "dial") {
+    if (elevMoa < 0) {
+      $("callElev").innerHTML = `Hold <span class="n">${fmt(Math.abs(sol.dropIn), 1)}"</span> low`;
+      $("callElevSub").textContent = `Bullet is still above the crosshair here. The CDS-ZL2 won't dial below zero, so hold slightly low, or just hold center on an elk.`;
+    } else {
+      const moaQ = Math.round(elevMoa * 4) / 4, clicks = Math.round(elevMoa * 4);
+      const rev = moaQ >= 20 ? "second turn (revolution indicator up)" : "first turn";
+      $("callElev").innerHTML = `Dial up <span class="n">${u === "MOA" ? fmt(moaQ, 2) : fmt(elev, 1)}</span> ${u}`;
+      $("callElevSub").textContent = moaQ > 38 ? `${clicks} clicks needed but the dial stops near 38 MOA. Dial 38 and hold the remaining ${fmt(moaQ - 38, 1)} MOA on the reticle.` :
+        `${clicks} clicks · ${rev} · drop ${fmt(-sol.dropIn, 1)}" from your ${S.rifle.zeroRange} yd zero`;
+    }
+  } else {
+    const marks = elevMoa * 15 / S.mag;
+    $("callElev").innerHTML = elevMoa < 0 ? `Hold <span class="n">${fmt(Math.abs(sol.dropIn), 1)}"</span> low` : `Hold <span class="n">${fmt(marks, 1)}</span> marks low`;
+    $("callElevSub").textContent = elevMoa < 0 ? "Bullet is above the crosshair at this range." :
+      `= ${fmt(elevMoa, 1)} MOA${S.mag !== 15 ? ` · at ${S.mag}x each mark is ${fmt(15 / S.mag, 2)} MOA` : ""} · aim ${fmt(-sol.dropIn, 1)}" high`;
+  }
+  if (Math.abs(sol.windIn) < 0.5) { $("callWind").innerHTML = `Wind: <span class="n">hold center</span>`; $("callWindSub").textContent = `${fmt(Math.abs(sol.windIn), 1)}" drift incl. ${fmt(sol.spinIn, 1)}" spin drift`; }
+  else {
+    const dir = wMoa > 0 ? "right" : "left";
+    const m = S.mode === "hold" ? Math.abs(wMoa) * 15 / S.mag : Math.abs(u === "MOA" ? wMoa : wHold);
+    $("callWind").innerHTML = `Hold <span class="n">${fmt(m, 1)}</span> ${S.mode === "hold" ? "marks" : u} ${dir}`;
+    $("callWindSub").textContent = `${fmt(Math.abs(sol.windIn), 1)}" of drift (${fmt(sol.spinIn, 1)}" of it spin drift). Wind dots are every 2 MOA${S.mode === "hold" && S.mag !== 15 ? " at 15x" : ""}.`;
+  }
+  // Dial mode: elevation is on the turret, so the dot only moves for wind. Hold mode: position in reticle marks.
+  if (S.mode === "dial") drawReticle(0, wMoa, true);
+  else drawReticle(Math.max(0, elevMoa) * 15 / S.mag, wMoa * 15 / S.mag, true);
+
+  $("stats").innerHTML = [
+    [fmt(sol.dropIn, 1) + '"', "Path vs. aim"], [Math.round(sol.v), "Impact fps"], [Math.round(sol.e).toLocaleString(), "Energy ft-lb"],
+    [fmt(sol.tof, 2) + "s", "Time of flight"], [fmt(Math.abs(sol.windIn), 1) + '"', "Wind drift"]
+  ].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
+
+  const fl = [];
+  fl.push(sol.v >= L.minExp ? ["good", "Expands", `Arrives at ${Math.round(sol.v)} fps, above the ${L.minExp} fps threshold for this bullet.`]
+    : ["bad", "No expand", `Arrives at ${Math.round(sol.v)} fps, below the ${L.minExp} fps threshold. Get closer.`]);
+  {
+    const sp = animal(), e = Math.round(sol.e);
+    fl.push(e >= sp.e ? ["good", `${sp.name} energy`, `${e.toLocaleString()} ft-lb clears the common ${sp.e.toLocaleString()} ft-lb guideline for ${sp.plural}.`]
+      : ["bad", `${sp.name} energy`, `${e.toLocaleString()} ft-lb is under the ${sp.e.toLocaleString()} ft-lb guideline for ${sp.plural}. Don't take this shot; get closer.`]);
+  }
+  if (S.zeroLoad && S.zeroLoad !== S.load && S.loads[S.zeroLoad]) {
+    const zn = S.loads[S.zeroLoad].name, zr = S.rifle.zeroRange;
+    fl.unshift(isMeasured()
+      ? ["good", "Zero offset", `Scope is zeroed with the ${zn}. Using where this load measured at ${zr} yd (${fmt(load().poiUp || 0, 2)}" up, ${fmt(load().poiRight || 0, 2)}" right).`]
+      : ["warn", "Zero offset", `Scope is zeroed with the ${zn}. This includes the physics difference, but not your rifle's own shift with this load. Shoot it at ${zr} yd and enter where it hits in Rifle & load.`]);
+  }
+  if (S.env.windMph >= 12 && S.range >= 300) fl.push(["warn", "Wind", `A 3 mph misread here moves impact about ${fmt(Math.abs(sol.windIn) * 3 / S.env.windMph, 1)}". Close the distance if you can.`]);
+  $("flags").innerHTML = fl.map(([c, t, d]) => `<div class="flag"><span class="pill ${c}">${t}</span><span>${d}</span></div>`).join("");
+
+  // Zero line: what the rifle is zeroed with, and how this load relates to it.
+  {
+    const zl = S.loads[S.zeroLoad], zr = S.rifle.zeroRange, zl1 = document.createElement("span"), zl2 = document.createElement("span");
+    zl1.innerHTML = "<b>Zeroed:</b> "; zl1.append(`${zr} yd with ${zl ? zl.name : load().name} (at ${Number(S.zeroEnv.altFt).toLocaleString()} ft, ${S.zeroEnv.tempF}°F)`);
+    if (zl && S.zeroLoad !== S.load) {
+      const z = BAL.solve(proj(), zEnv(), { ...zEnv(), angle: 0, windMph: 0, spin: false }, [zr], zeroOpts())[0];
+      const ud = z ? `${fmt(Math.abs(z.dropIn), 1)}" ${z.dropIn < 0 ? "low" : "high"}` : "";
+      const lr = isMeasured() && load().poiRight ? `, ${fmt(Math.abs(load().poiRight), 1)}" ${load().poiRight > 0 ? "right" : "left"}` : "";
+      zl2.innerHTML = "<b>This load:</b> "; zl2.append(`hits ${ud}${lr} at ${zr} yd with that zero (${isMeasured() ? "measured" : "physics estimate; measure it"}). Already included above.`);
+    } else { zl2.innerHTML = "<b>This load:</b> "; zl2.append("same load you zeroed with."); }
+    $("zeroLine").replaceChildren(zl1, zl2);
+  }
+  renderInsights(sol);
+  if (!$("tab-card").hidden) renderCard();
+}
+
+function renderInsights(sol) {
+  const r = S.range, items = [];
+  const d = (a, b) => b.dropIn - a.dropIn;
+  const sea = solveAt([r], { altFt: 0, tempF: 59, rh: 0, pressure: 29.92 })[0];
+  if (sea) {
+    const diff = sol.dropIn - sea.dropIn;
+    items.push([`${diff >= 0 ? "+" : ""}${fmt(diff, 1)}"`, "Altitude & temperature", `Same shot at sea level would hit ${fmt(Math.abs(diff), 1)}" ${diff >= 0 ? "lower" : "higher"}. Today's air is ${Math.round(BAL.atmo(S.env).rho / BAL.atmo({ altFt: 0, tempF: 59, rh: 0, pressure: 29.92 }).rho * 100)}% as dense, so drag is lower and the bullet holds speed.`]);
+  }
+  const zr = S.rifle.zeroRange, atZero = solveAt([zr])[0];
+  if (atZero) items.push([`${atZero.dropIn >= 0 ? "+" : ""}${fmt(atZero.dropIn, 1)}"`, "Your zero today", `Zeroed at ${S.zeroEnv.altFt.toLocaleString()} ft and ${S.zeroEnv.tempF}°F, your ${zr} yd zero now prints ${fmt(Math.abs(atZero.dropIn), 1)}" ${atZero.dropIn >= 0 ? "high" : "low"} in this air. ${Math.abs(atZero.dropIn) < 0.5 ? "Not worth re-zeroing." : ""}`]);
+  const fast = solveAt([r], {}, { mv: load().mv - 25 })[0];
+  if (fast) items.push([`${fmt(Math.abs(d(sol, fast)), 1)}"`, "Velocity uncertainty", `If your rifle is 25 fps slower than ${load().mv}, you'd hit ${fmt(Math.abs(d(sol, fast)), 1)}" lower at ${r} yd. That's why you chronograph or true.`]);
+  const near = solveAt([Math.max(25, r - 25), r + 25]);
+  if (near.length === 2) items.push([`${fmt(Math.abs(near[1].dropIn - near[0].dropIn) / 2, 1)}"`, "Ranging error", `Each 25 yd you misjudge at this distance costs about ${fmt(Math.abs(near[1].dropIn - near[0].dropIn) / 2, 1)}" of elevation.`]);
+  const w1 = solveAt([r], { windMph: 1, windClock: 3, spin: false })[0];
+  if (w1) items.push([`${fmt(Math.abs(w1.windIn), 1)}"`, "Per 1 mph of wind", `A full-value 1 mph change moves impact ${fmt(Math.abs(w1.windIn), 1)}" sideways here (${fmt(Math.abs(w1.wMoa), 2)} MOA).`]);
+  if (S.env.angle !== 0) {
+    const flat = solveAt([r], { angle: 0 })[0];
+    items.push([`${fmt(sol.dropIn - flat.dropIn, 1)}"`, "Shot angle", `At ${Math.abs(S.env.angle)}° ${S.env.angle > 0 ? "uphill" : "downhill"} the bullet strikes ${fmt(Math.abs(sol.dropIn - flat.dropIn), 1)}" higher than a flat ${r} yd shot. The solution above already accounts for it.`]);
+  }
+  $("insights").innerHTML = items.map(([a, b, c]) => `<li><span class="d">${a}</span><div><strong>${b}</strong><p>${c}</p></div></li>`).join("");
+}
+
+// ---------- dope card ----------
+function renderCard() {
+  const ranges = []; for (let r = 100; r <= 1000; r += 50) ranges.push(r);
+  const rows = solveAt(ranges, { windMph: 10, windClock: 3, angle: 0 });
+  const L = load(), u = unit();
+  let h = `<thead><tr><th>Yd</th><th>Dial ${u}</th><th>Clicks</th><th>Drop in</th><th>10mph ${u}</th><th>fps</th><th>ft-lb</th></tr></thead><tbody>`;
+  rows.forEach(s => {
+    const up = -ang(s, "e"), cl = Math.round(-s.moa * 4);
+    const cur = Math.abs(s.r - S.range) < 25 ? "cur" : "";
+    h += `<tr class="${cur}"><td>${s.r}</td><td>${up < 0 ? "hold" : fmt(up, u === "MOA" ? 2 : 1)}</td><td>${cl < 0 ? "–" : cl}</td><td>${fmt(s.dropIn, 1)}</td><td>${fmt(Math.abs(ang(s, "w")), 1)}</td><td class="${s.v < L.minExp ? "bad" : ""}">${Math.round(s.v)}</td><td class="${s.e < animal().e ? "bad" : ""}">${Math.round(s.e).toLocaleString()}</td></tr>`;
+  });
+  $("cardTbl").innerHTML = h + "</tbody>";
+  $("cardCond").textContent = `${L.name} · ${S.env.altFt.toLocaleString()} ft, ${S.env.tempF}°F`;
+
+  // chart + MPBR
+  const vit = S.vital;
+  $("vitalSeg").innerHTML = [[3, "6\" deer"], [4, "8\" elk"], [5, "10\" elk"]].map(([r, t]) => `<button data-r="${r}" aria-pressed="${r === vit}">${t}</button>`).join("");
+  $("vitalSeg").querySelectorAll("button").forEach(b => b.onclick = () => { S.vital = +b.dataset.r; save(); renderCard(); });
+  const best = BAL.mpbr(proj(), { ...S.env, angle: 0, windMph: 0 }, vit);
+  const dense = []; for (let r = 0; r <= 1000; r += 10) dense.push(r || 1);
+  const cur = solveAt(dense, { windMph: 0, angle: 0, spin: false });
+  const alt = best ? BAL.solve({ ...proj(), zeroRange: best.zero }, { ...S.env, windMph: 0, angle: 0 }, { ...S.env, windMph: 0, angle: 0, spin: false }, dense) : [];
+  const W = 640, H = 300, l = 44, rr = 14, t = 14, b = 34, yMin = -30, yMax = 8;
+  const X = r => l + (r / 1000) * (W - l - rr), Y = v => t + (yMax - v) / (yMax - yMin) * (H - t - b);
+  let s = `<rect x="${l}" y="${Y(vit)}" width="${W - l - rr}" height="${Y(-vit) - Y(vit)}" fill="var(--accent-soft)"/>`;
+  for (let v = yMin; v <= yMax; v += 6) { if (v > yMax) break; s += `<line x1="${l}" x2="${W - rr}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line)" stroke-width="${v === 0 ? 1.5 : .6}"/><text x="${l - 6}" y="${Y(v) + 4}" font-size="11" text-anchor="end" fill="var(--muted)">${v > 0 ? "+" : ""}${v}"</text>`; }
+  for (let r = 0; r <= 1000; r += 200) s += `<text x="${X(r)}" y="${H - 12}" font-size="11" text-anchor="middle" fill="var(--muted)">${r}</text>`;
+  const path = arr => arr.filter(p => p.dropIn > yMin - 5).map((p, i) => `${i ? "L" : "M"}${X(p.r).toFixed(1)} ${Y(Math.max(yMin, p.dropIn)).toFixed(1)}`).join(" ");
+  if (alt.length) s += `<path d="${path(alt)}" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="5 4"/>`;
+  s += `<path d="${path(cur)}" fill="none" stroke="var(--accent)" stroke-width="2.5"/>`;
+  const sp = cur.find(p => Math.abs(p.r - S.range) < 6);
+  if (sp && sp.dropIn > yMin) s += `<circle cx="${X(sp.r)}" cy="${Y(sp.dropIn)}" r="5" fill="var(--accent)"/>`;
+  s += `<text x="${l + 6}" y="${Y(vit) - 5}" font-size="11" fill="var(--muted)">±${vit}" vital zone</text>`;
+  s += `<text x="${W - rr}" y="${H - 12}" font-size="11" text-anchor="end" fill="var(--muted)">yd</text>`;
+  $("chart").innerHTML = s;
+  const curFar = (() => { let f = 0; for (const p of cur) { if (p.dropIn <= vit && p.dropIn >= -vit) f = p.r; else if (p.r > 50) break; } return f; })();
+  $("mpbrOut").innerHTML = best ? `<b>Solid line:</b> your ${S.rifle.zeroRange} yd zero keeps you in a ${vit * 2}" circle to about <b>${curFar} yd</b>.<br><b>Dashed line:</b> a <b>${best.zero} yd zero</b> would let you hold dead-on to <b>${best.far} yd</b> (peaks ${fmt(best.peak, 1)}" high mid-range). Past that, dial.` : "No point-blank solution for this zone.";
+
+  // CDS dial preview
+  const fine = []; for (let r = 100; r <= 1000; r += 5) fine.push(r);
+  const pts = solveAt(fine, { windMph: 0, angle: 0, spin: false });
+  const marks = [];
+  for (let m = 1; m <= 20; m++) {
+    for (let i = 1; i < pts.length; i++) {
+      const a = -pts[i - 1].moa, c = -pts[i].moa;
+      if (a < m && c >= m) { marks.push([m, Math.round((pts[i - 1].r + (m - a) / (c - a) * 5) / 5) * 5]); break; }
+    }
+  }
+  $("cdsDial").innerHTML = marks.map(([m, r]) => `<div><b>${r}</b>${m} MOA</div>`).join("") || "<span class=note>Out of range.</span>";
+}
+
+// ---------- truing ----------
+$("tGo").onclick = () => {
+  const r = parseFloat($("tRange").value), m = parseFloat($("tMoa").value);
+  if (!(r > 0) || isNaN(m)) { $("tOut").textContent = "Enter the range and the MOA you dialed to hit."; return; }
+  let lo = 2000, hi = 3400;
+  for (let i = 0; i < 30; i++) {
+    const mid = (lo + hi) / 2, s = solveAt([r], { windMph: 0, angle: 0 }, { mv: mid })[0];
+    if (!s) { lo = mid; continue; }
+    if (-s.moa > m) lo = mid; else hi = mid;
+  }
+  const mv = Math.round((lo + hi) / 2);
+  $("tOut").innerHTML = `Your data fits <b>${mv} fps</b>. <button class="btn" id="tApply">Use it</button>`;
+  $("tApply").onclick = () => { load().mv = mv; save(); $("tOut").textContent = `Muzzle velocity set to ${mv} fps.`; render(); };
+};
+
+// ---------- quiz ----------
+let Q;
+function newQ() {
+  const r = 200 + Math.round(Math.random() * 16) * 25, w = Math.round(Math.random() * 14), c = [2, 3, 3, 9, 9, 10][Math.floor(Math.random() * 6)];
+  Q = { r, w, c };
+  $("qText").textContent = `Bull at ${r} yd. Wind ${w} mph from ${c} o'clock. ${load().name}, ${S.env.altFt.toLocaleString()} ft, ${S.env.tempF}°F.`;
+  $("qE").value = ""; $("qW").value = ""; $("qOut").hidden = true;
+}
+$("qNew").onclick = newQ;
+$("qCheck").onclick = () => {
+  const s = solveAt([Q.r], { windMph: Q.w, windClock: Q.c, angle: 0 })[0];
+  const e = Math.max(0, -s.moa), w = -s.wMoa;
+  const ge = parseFloat($("qE").value) || 0, gw = parseFloat($("qW").value) || 0;
+  const missE = (ge - e) * 1.047 * Q.r / 100, missW = (Math.abs(gw) - Math.abs(w)) * 1.047 * Q.r / 100;
+  const miss = Math.hypot(missE, missW);
+  const verdict = miss <= 4 ? `<span class="pill good">Hit</span> inside an elk's vitals.` : miss <= 8 ? `<span class="pill warn">Edge</span> close, but marginal.` : `<span class="pill bad">Miss</span>`;
+  $("qOut").hidden = false;
+  $("qOut").innerHTML = `${verdict}<br>Answer: dial <b>${fmt(Math.round(e * 4) / 4, 2)} MOA</b>, hold <b>${fmt(Math.abs(w), 1)} MOA ${w > 0 ? "right" : "left"}</b>. Your call would land about ${fmt(Math.abs(missE), 1)}" ${missE > 0 ? "high" : "low"} and ${fmt(Math.abs(missW), 1)}" off for wind.<br><span class="note">Rule of thumb check: at ${Q.r} yd, 1 MOA ≈ ${fmt(1.047 * Q.r / 100, 1)}".</span>`;
+};
+$("qOpen").onclick = () => { S.range = Q.r; S.env.windMph = Q.w; S.env.windClock = Q.c; S.env.angle = 0; save(); goTab("shoot"); };
+
+// ---------- lessons ----------
+const LESSONS = [
+  ["What this app does (and how Hornady's differs)", `<p>It flies your bullet through the air in small time steps, adding up gravity and drag, and reports where it is at each yard. That's a "point-mass" solver, the same method most hunting apps use.</p><p>Hornady's 4DOF solver goes further: it uses drag curves measured on Doppler radar for each specific bullet and models the bullet's spin and tilt. For a .30-06 inside 600 yd, the difference is usually smaller than your velocity uncertainty. The bigger accuracy win for you is a real chronograph number and a truing session.</p>`, null],
+  ["MOA, inches, and your turret", `<p>One MOA is about 1.05" at 100 yd, 4.2" at 400 yd. Your VX-5HD clicks are ¼ MOA, so four clicks move impact about an inch at 100 yd.</p><p>The CDS-ZL2 dial gives 20 MOA per turn. The ZeroLock button stops it from turning below your zero, and the revolution indicator pops up on the second turn.</p>`, { range: 400, windMph: 0 }],
+  ["Your reticle is second focal plane", `<p>The Impact-29 marks are printed for 15x. Turn down to 7.5x and the reticle stays the same size in your eye while the target shrinks, so each mark now covers 2 MOA. Rule: true MOA per mark = 15 ÷ your power.</p><p>Simplest field habit: crank to 15x before holding, or dial instead.</p>`, { mode: "hold", mag: 8, range: 400 }],
+  ["Why altitude matters so much in Colorado", `<p>Drag is proportional to air density. At 9,000 ft the air is roughly 75% as dense as at sea level, so your bullet keeps more speed and drops less. That's also why it carries more energy downrange up high.</p><p>Try switching the Air preset between Sea level and Elk timber at 400 yd and watch the dial number change.</p>`, { range: 450, preset: 4 }],
+  ["Ballistic coefficient, G1 vs. G7", `<p>BC compares your bullet's drag to a reference projectile. G1 is a flat-base shape from the 1800s; G7 is a long boat-tail, much closer to the AccuBond LR and Terminal Ascent. A G1 BC drifts as the bullet slows; a G7 BC stays truer.</p><p>Makers publish one or both. Retail listings for the AccuBond LR show different numbers (.525, .598, .640) because Nosler revised it. Use the maker's current figure, then let truing absorb any error.</p>`, null],
+  ["Reading wind with the clock", `<p>Face the target: that's 12. Wind from 3 or 9 is full value. From 2, 4, 8 or 10 count it as most of full value; from 1, 5, 7 or 11 about half. Head and tail winds barely drift the bullet.</p><p>In mountain country the wind at the animal often differs from the wind at you. Watch grass and needles near the target.</p>`, { range: 400, windMph: 10, windClock: 2 }],
+  ["Uphill and downhill", `<p>Gravity only bends the path across the horizontal distance. Shooting 30° downhill at 400 yd, the bullet drops about like a 350 yd flat shot, so holding for 400 sends it high.</p><p>Your rangefinder's angle-compensated mode does this for you. Here, set the angle and the solution includes it.</p>`, { range: 400, angle: -30, windMph: 0 }],
+  ["Zero and point-blank range", `<p>With a 200 yd zero, the bullet rises about 2" over the line of sight around 100 yd and crosses back down at 200. A longer zero buys more dead-on distance at the cost of a higher mid-range arc.</p><p>The Dope card tab finds the zero that keeps the bullet inside the vital circle the longest.</p>`, null],
+  ["Expansion and energy", `<p>A bullet that arrives too slowly may pencil through. Nosler rates the AccuBond LR to open down to 1,300 fps. Energy guidelines (1,500 ft-lb elk, 1,000 deer) are rough rules of thumb, but they line up with sensible ethical ranges for a .30-06.</p><p>Both checks show under every firing solution.</p>`, { range: 600 }],
+  ["Truing: make the app match your rifle", `<p>Shoot a group at 400–500 yd with your best guess dialed. If you had to dial more or less to hit center, enter what worked in Rifle & load → True your velocity. The app back-solves the muzzle velocity that explains it.</p><p>Do it in calm air and with a known range, or you'll be truing out wind and ranging error instead.</p>`, null],
+];
+$("lessons").innerHTML = `<h2>Lessons</h2>` + LESSONS.map(([t, body, demo], i) => `<details class="lesson"><summary>${t}</summary>${body}${demo ? `<button class="btn" data-demo="${i}">Try it in Shoot</button>` : ""}</details>`).join("");
+$("lessons").querySelectorAll("[data-demo]").forEach(bn => bn.onclick = () => {
+  const d = LESSONS[bn.dataset.demo][2];
+  if (d.range) S.range = d.range;
+  ["windMph", "windClock", "angle"].forEach(k => { if (k in d) S.env[k] = d[k]; });
+  if ("preset" in d) { const p = PRESETS[d.preset]; Object.assign(S.env, { altFt: p.altFt, tempF: p.tempF, rh: p.rh, pressure: 0 }); }
+  if (d.mode) S.mode = d.mode; if (d.mag) S.mag = d.mag;
+  if (!("angle" in d)) S.env.angle = 0;
+  save(); goTab("shoot");
+});
+
+// ---------- add / delete loads ----------
+let SAMPLE = null, canImages = false, pendingFile = null;
+(async () => {
+  if (window.kbSample) { SAMPLE = window.kbSample; canImages = true; return; } // installed app: its own Claude connection
+  if (!window.claude || !window.claude.use) return;
+  SAMPLE = await claude.use("sample");
+  if (SAMPLE) { const lim = await SAMPLE.limits().catch(() => null); canImages = !!(lim && lim.images); }
+})();
+const is3006 = c => /30[\s\-‐-―.]*0?6|springfield/i.test(String(c || "")) && !/308|300|7\.62x51/i.test(String(c || "").replace(/30[\s\-‐-―.]*06/i, ""));
+function openAdd(title) {
+  $("addBox").hidden = false; $("addTitle").textContent = title; $("addErr").hidden = true;
+  $("aSave").disabled = false;
+}
+function closeAdd() { $("addBox").hidden = true; $("addImg").hidden = true; pendingFile = null; }
+function fillForm(o) {
+  $("aName").value = o.name || ""; $("aCal").value = o.caliber || ".30-06 Springfield";
+  $("aWeight").value = o.weight || ""; $("aMv").value = o.mv || ""; $("aBc").value = o.bc || "";
+  $("aModel").value = o.model || "G1"; $("aMinExp").value = o.minExp || 1800; $("aSrc").textContent = o.src || "";
+}
+// + Add opens a chooser. Labels open the file pickers natively, which phones handle more reliably than script clicks.
+function showPick() {
+  const ok = !!(SAMPLE && canImages && (!SAMPLE.ready || SAMPLE.ready()));
+  $("addPick").hidden = false;
+  ["pickCam", "pickLib"].forEach(id => $(id).setAttribute("aria-disabled", !ok));
+  $("addPickNote").textContent = (!ok && SAMPLE && SAMPLE.ready) ? (navigator.onLine ? "Add your Claude API key under Online features to read box photos. You can type the load in now." : "No signal, so photo reading is off. Type the load in, or search the factory list.") : ok ? "Get the label with the caliber, bullet weight and velocity table in the frame."
+    : (window.claude ? "Photo reading isn't connected yet. Give it a few seconds and tap + Add again, or type the load in." : "Photo reading needs internet and Claude. You can type the load in.");
+}
+$("addLoad").onclick = () => { if ($("addPick").hidden) showPick(); else $("addPick").hidden = true; };
+$("addType").onclick = () => { $("addPick").hidden = true; openAdd("New load (type it in)"); $("addStatus").textContent = "Enter the numbers from the box or the maker's website."; fillForm({}); $("aRetake").hidden = true; };
+$("aRetake").onclick = () => { closeAdd(); showPick(); };
+$("aCancel").onclick = closeAdd;
+["ammoCam", "ammoLib"].forEach(id => $(id).addEventListener("change", e => { const f = e.target.files && e.target.files[0]; if (f) { $("addPick").hidden = true; readBox(f); } e.target.value = ""; }));
+
+// Fit a G1 BC to a printed velocity table (preferred) or drop table, standard sea-level air.
+function fitBC(mv, weight, vt, dt, zeroYd) {
+  const std = { altFt: 0, tempF: 59, rh: 0, pressure: 29.92, angle: 0, windMph: 0, spin: false };
+  const useV = vt.length >= 2, pts = useV ? vt : dt; if (pts.length < 2) return null;
+  const ranges = pts.map(p => p.yd);
+  const err = bc => {
+    const r = BAL.solve({ model: "G1", bc, mv, weight, sightHeight: 1.5, zeroRange: zeroYd || 200 }, std, std, ranges);
+    if (r.length < ranges.length) return 1e12;
+    return r.reduce((s, x, i) => s + (useV ? (x.v - pts[i].fps) ** 2 : 400 * (x.dropIn - pts[i].inches) ** 2), 0);
+  };
+  let best = 0.4, be = Infinity;
+  for (let bc = 0.15; bc <= 0.85; bc += 0.005) { const e = err(bc); if (e < be) { be = e; best = bc; } }
+  for (let bc = best - 0.005; bc <= best + 0.005; bc += 0.0005) { const e = err(bc); if (e < be) { be = e; best = bc; } }
+  const rms = Math.sqrt(be / pts.length) / (useV ? 1 : 20);
+  return { bc: Math.round(best * 1000) / 1000, from: useV ? "velocity" : "drop", rms };
+}
+
+async function readBox(file) {
+  pendingFile = file;
+  openAdd("Reading the box…");
+  $("aRetake").hidden = false;
+  try { $("addImg").src = URL.createObjectURL(file); $("addImg").hidden = false; } catch (e) {}
+  $("addStatus").textContent = "Claude is reading the box. This can take up to a minute.";
+  fillForm({}); $("aSave").disabled = true;
+  const prompt = `This photo shows a box of factory rifle ammunition (or reloading bullets). Read what is printed on it.
+Reply with only one JSON object:
+{"caliber": string, "brand": string, "productLine": string, "partNumber": string|null, "bulletWeightGr": number|null, "bulletType": string|null,
+ "isComponentBullets": boolean, "muzzleVelocityFps": number|null, "testBarrelIn": number|null,
+ "velocityTable": [{"yd": number, "fps": number}], "dropTable": [{"yd": number, "inches": number}], "dropZeroYd": number|null,
+ "bcG1": number|null, "bcG7": number|null, "bcFrom": "box"|"knowledge"|null, "minExpansionFps": number|null,
+ "unreadable": string|null}
+Rules: velocityTable and dropTable only from numbers printed on the box (leave [] if none; exclude the muzzle row). dropZeroYd = the range where the printed drop is 0.
+bcG1/bcG7: use the box if printed; otherwise give the manufacturer's published figure for this exact part number only if you are confident, with bcFrom "knowledge"; otherwise null.
+minExpansionFps only if the manufacturer publishes one for this bullet, else null. If the caliber or weight can't be read, say what is missing in "unreadable".`;
+  let r;
+  try {
+    r = await SAMPLE.json(prompt, { images: [file], modelTier: "default" });
+  } catch (e) {
+    const msg = { not_granted: "Photo reading was not allowed. You can type the load in instead.", rate_limited: "Too many requests right now. Try again in a minute, or type the load in.",
+      image_rejected: "That image couldn't be used. Try another photo.", images_unavailable: "Photo reading isn't available here. Type the load in instead.",
+      invalid_json: "Couldn't make sense of the box. Retake the photo straight-on with the label filling the frame.",
+      offline: "Lost signal. Type the load in, or try again with signal.", no_key: "Add your Claude API key under Online features to read box photos.", bad_key: "Your Claude API key was rejected. Check it under Online features.", no_credit: "Your Claude API account is out of credit. Add credit at console.anthropic.com." }[e && e.code] || "Couldn't read the box. Retake the photo or type the load in.";
+    $("addTitle").textContent = "New load"; $("addStatus").textContent = ""; $("addErr").textContent = msg; $("addErr").hidden = false;
+    fillForm({}); $("aSave").disabled = false; return;
+  }
+  $("addTitle").textContent = "Check and save";
+  const cal = r && r.caliber ? String(r.caliber) : "";
+  if (cal && !is3006(cal)) {
+    $("addErr").textContent = `This box is ${cal}. It is not a .30-06 Springfield cartridge and must not be fired in your BLR. Not saved.`;
+    $("addErr").hidden = false; $("addStatus").textContent = ""; fillForm({ caliber: cal }); $("aSave").disabled = true; return;
+  }
+  const w = Number(r.bulletWeightGr) || null, mv = Number(r.muzzleVelocityFps) || null;
+  const vt = (Array.isArray(r.velocityTable) ? r.velocityTable : []).map(p => ({ yd: Number(p.yd), fps: Number(p.fps) })).filter(p => p.yd > 0 && p.fps > 0).sort((a, b) => a.yd - b.yd);
+  const dt = (Array.isArray(r.dropTable) ? r.dropTable : []).map(p => ({ yd: Number(p.yd), inches: Number(p.inches) })).filter(p => p.yd > 0 && isFinite(p.inches)).sort((a, b) => a.yd - b.yd);
+  let bc = null, model = "G1", src = [];
+  const fit = (mv && w) ? fitBC(mv, w, vt, dt, Number(r.dropZeroYd) || 200) : null;
+  if (r.bcG7 && r.bcFrom === "box") { bc = r.bcG7; model = "G7"; src.push("BC: G7 printed on the box."); }
+  else if (r.bcG1 && r.bcFrom === "box") { bc = r.bcG1; src.push("BC: G1 printed on the box."); }
+  else if (fit && fit.rms < (fit.from === "velocity" ? 15 : 0.5)) { bc = fit.bc; src.push(`BC: back-calculated from the ${fit.from} table printed on the box (matches within ${fit.from === "velocity" ? Math.round(fit.rms) + " fps" : fit.rms.toFixed(1) + " in"}).`); }
+  else if (r.bcG7) { bc = r.bcG7; model = "G7"; src.push("BC: maker's published G7 from Claude's knowledge, not the box. Double-check it."); }
+  else if (r.bcG1) { bc = r.bcG1; src.push("BC: maker's published G1 from Claude's knowledge, not the box. Double-check it."); }
+  else src.push("BC: not found. Look it up on the maker's site and enter it.");
+  if (r.isComponentBullets) src.push("These are reloading bullets: enter your load's chronographed velocity.");
+  else if (mv) src.push(`Velocity: ${mv} fps from the box${r.testBarrelIn ? `, ${r.testBarrelIn}" test barrel` : ""}. Your 22" barrel likely runs a little slower.`);
+  else src.push("Velocity: not printed. Enter it from the maker's site or a chronograph.");
+  src.push(r.minExpansionFps ? `Expansion: maker rates it to ${r.minExpansionFps} fps.` : "Expansion: no maker figure, so 1,800 fps is used as a conservative default.");
+  if (r.unreadable) src.push("Couldn't read: " + r.unreadable);
+  const name = [r.brand, r.productLine, w ? w + " gr" : "", r.bulletType, r.partNumber ? "(#" + String(r.partNumber).replace(/^#/, "") + ")" : ""].filter(Boolean).join(" ");
+  fillForm({ name, caliber: cal || ".30-06 Springfield", weight: w, mv, bc, model, minExp: Number(r.minExpansionFps) || 1800, src: src.join(" ") });
+  $("addStatus").textContent = "Check these against the box, fix anything that's off, then save.";
+  $("aSave").disabled = false;
+}
+
+$("aSave").onclick = () => {
+  const L = { name: $("aName").value.trim(), model: $("aModel").value, bc: parseFloat($("aBc").value), mv: parseFloat($("aMv").value),
+    weight: parseFloat($("aWeight").value), length: 0, minExp: parseFloat($("aMinExp").value) || 1800 };
+  const cal = $("aCal").value.trim();
+  const bad = [];
+  if (!L.name) bad.push("a name"); if (!(L.weight > 50 && L.weight < 300)) bad.push("bullet weight");
+  if (!(L.mv > 1500 && L.mv < 4000)) bad.push("muzzle velocity"); if (!(L.bc > 0.1 && L.bc < 1.2)) bad.push("ballistic coefficient");
+  if (cal && !is3006(cal)) { $("addErr").textContent = `${cal} is not .30-06 Springfield. Not saved.`; $("addErr").hidden = false; return; }
+  if (bad.length) { $("addErr").textContent = "Missing or out of range: " + bad.join(", ") + "."; $("addErr").hidden = false; return; }
+  L.note = ($("aSrc").textContent || "Added by hand.") + " Added " + new Date().toLocaleDateString() + ".";
+  const key = "u" + Date.now().toString(36);
+  L.fav = true; S.loads[key] = L; S.load = key; save(); closeAdd(); render();
+  $("delNote").textContent = `Saved "${L.name}" and selected it. Confirm your zero with it before hunting.`;
+};
+
+$("delLoad").onclick = () => {
+  const keys = Object.keys(S.loads), b = $("delLoad");
+  if (keys.length <= 1) { $("delNote").textContent = "Keep at least one load. Add another before deleting this one."; return; }
+  if (!b.dataset.armed) {
+    b.dataset.armed = S.load; b.textContent = "Tap to confirm";
+    $("delNote").textContent = `Delete "${load().name}"? This can't be undone.`;
+    setTimeout(() => { if (b.dataset.armed) { delete b.dataset.armed; b.textContent = "Delete"; $("delNote").textContent = ""; } }, 5000);
+    return;
+  }
+  const k = b.dataset.armed; delete b.dataset.armed; b.textContent = "Delete";
+  const name = S.loads[k] ? S.loads[k].name : "";
+  delete S.loads[k];
+  if (S.zeroLoad === k) S.zeroLoad = null;
+  S.load = Object.keys(S.loads)[0];
+  save(); render(); $("delNote").textContent = `Deleted "${name}".`;
+};
+
+// ---------- Spotter (Claude, with page tools) ----------
+function getSolution() {
+  const s = solveAt([S.range])[0], L = load(), zl = S.loads[S.zeroLoad];
+  if (!s) return { error: "Out of range for this load." };
+  const elev = -s.moa, w = -s.wMoa;
+  return {
+    load: L.name, muzzleVelocityFps: L.mv,
+    zero: { rangeYd: S.rifle.zeroRange, zeroedWith: zl ? zl.name : L.name, sameLoad: !zl || S.zeroLoad === S.load, offsetMeasured: isMeasured() },
+    shot: { rangeYd: S.range, angleDeg: S.env.angle, windMph: S.env.windMph, windFromClock: S.env.windClock },
+    air: { altitudeFt: S.env.altFt, tempF: S.env.tempF, humidityPct: S.env.rh },
+    elevation: elev < -0.125 ? { holdLowInches: +Math.abs(s.dropIn).toFixed(1) } : { dialUpMoa: Math.round(Math.max(0, elev) * 4) / 4, clicks: Math.round(Math.max(0, elev) * 4), overDialLimit: elev > 38 },
+    reticleHold: { magnification: S.mag, elevationMarks: +(Math.max(0, elev) * 15 / S.mag).toFixed(1), windMarks: +(Math.abs(w) * 15 / S.mag).toFixed(1), note: "Marks are true MOA only at 15x" },
+    wind: { holdMoa: +Math.abs(w).toFixed(2), holdDirection: Math.abs(s.windIn) < 0.5 ? "center" : (w > 0 ? "right" : "left"), driftInches: +Math.abs(s.windIn).toFixed(1) },
+    impact: { velocityFps: Math.round(s.v), energyFtLb: Math.round(s.e), timeOfFlightS: +s.tof.toFixed(2), bulletWillExpand: s.v >= L.minExp, minExpansionFps: L.minExp, animal: animal().name, energyGuidelineFtLb: animal().e, energyOK: s.e >= animal().e }
+  };
+}
+const clampN = (v, lo, hi) => Math.min(hi, Math.max(lo, Number(v)));
+const SP_TOOLS = [
+  { name: "get_solution", description: "Returns the current firing solution for the shot set in the app (load, zero, range, wind, angle, air, dial or hold, wind hold, impact speed and energy). Call before giving any numbers.",
+    execute: () => getSolution() },
+  { name: "set_shot", description: "Change the shot in the app, then return the new firing solution. Only pass what Lance gave. windFromClock: 12 = wind in his face, 3 = from his right, 9 = from his left. angleDeg: + uphill, - downhill.",
+    inputSchema: { type: "object", properties: { rangeYd: { type: "number", description: "25 to 1000 yards" }, windMph: { type: "number" }, windFromClock: { type: "number" }, angleDeg: { type: "number" }, altitudeFt: { type: "number" }, tempF: { type: "number" }, magnification: { type: "number" }, animal: { type: "string", enum: ["pronghorn", "deer", "elk", "moose"] } } },
+    execute: i => {
+      if (i.rangeYd != null && isFinite(i.rangeYd)) S.range = Math.round(clampN(i.rangeYd, 25, 1000));
+      if (i.windMph != null && isFinite(i.windMph)) S.env.windMph = Math.round(clampN(i.windMph, 0, 40));
+      if (i.windFromClock != null && isFinite(i.windFromClock)) S.env.windClock = ((Math.round(Number(i.windFromClock)) % 12) + 12) % 12;
+      if (i.angleDeg != null && isFinite(i.angleDeg)) S.env.angle = Math.round(clampN(i.angleDeg, -45, 45));
+      if (i.altitudeFt != null && isFinite(i.altitudeFt)) { S.env.altFt = Math.round(clampN(i.altitudeFt, -500, 15000)); S.env.pressure = 0; }
+      if (i.tempF != null && isFinite(i.tempF)) S.env.tempF = Math.round(clampN(i.tempF, -30, 115));
+      if (i.magnification != null && isFinite(i.magnification)) { S.mag = Math.round(clampN(i.magnification, 3, 15)); S.mode = "hold"; }
+      if (i.animal && SPECIES[i.animal]) S.species = i.animal;
+      save(); render(); return getSolution();
+    } },
+  { name: "list_loads", description: "Lists the loads saved in the app, with which one is selected and which one the rifle is zeroed with.",
+    execute: () => Object.entries(S.loads).map(([k, l]) => ({ key: k, name: l.name, selected: k === S.load, zeroLoad: k === S.zeroLoad })) },
+  { name: "select_load", description: "Select a saved load by its key from list_loads, then return the new firing solution.",
+    inputSchema: { type: "object", properties: { key: { type: "string" } }, required: ["key"] },
+    execute: i => { const k = String(i.key); if (!S.loads[k]) throw new Error("No load with that key; call list_loads."); S.load = k; save(); render(); return getSolution(); } }
+];
+const SP_RULES = `You are Lance's hunting spotter, speaking through his ballistics app. Rifle: Browning BLR .30-06, 22 in barrel. Scope: Leupold VX-5HD 3-15x44 CDS-ZL2, 1/4 MOA clicks, 20 MOA per dial turn, dial stops near 38 MOA, ZeroLock (can't dial below zero). Reticle: Impact-29 MOA, second focal plane, marks true only at 15x.
+How to work:
+- Never make up numbers. When he gives range, wind, angle, altitude, temperature or magnification, call set_shot with just those. When he names a load, call list_loads then select_load. Otherwise call get_solution before giving a call.
+- Wind clock: 12 is wind in his face, 3 is from his right, 9 from his left. "Left to right" wind comes from 9; "right to left" from 3. A quartering wind from the front right is about 1 or 2.
+- Talk like a calm, experienced spotter: numbers first, short. Example: "Dial 4.5 up, 18 clicks. Hold 1.5 right for wind." Then at most one short note: bullet below expansion speed or energy under the guideline for the selected animal (say plainly to get closer), zero offset not yet measured, or a gusty-wind caution.
+- If he asks why, teach briefly in plain words.
+- Plain text, no markdown, no lists. Under 3 sentences unless he asks for more.`;
+let spTurns = [], spBusy = false, spCtl = null, spSpeak = false;
+function spAdd(cls, text) { const d = document.createElement("div"); d.className = "msg " + cls; d.textContent = text; $("spLog").append(d); $("spLog").scrollTop = $("spLog").scrollHeight; return d; }
+function spSay(text) {
+  if (!spSpeak) return;
+  try { const u = new SpeechSynthesisUtterance(text); u.rate = 1.05; window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); } catch (e) { $("spNote").textContent = "Read aloud isn't available on this device."; }
+}
+$("spBtn").onclick = () => {
+  const box = $("spotter"), open = box.hidden;
+  box.hidden = !open; $("spBtn").setAttribute("aria-expanded", open);
+  if (open) {
+    const spReady = SAMPLE && (!SAMPLE.ready || SAMPLE.ready());
+    if (!$("spLog").children.length) spAdd("sys", spReady ? "Tell me the range, wind and angle when you have them." : "The spotter needs an internet connection and Claude. Your firing solution and dope card still work.");
+    $("spSend").disabled = !spReady; box.scrollIntoView({ block: "start" }); if (spReady) $("spIn").focus();
+  }
+};
+$("spClose").onclick = () => { $("spotter").hidden = true; $("spBtn").setAttribute("aria-expanded", "false"); try { spCtl && spCtl.abort(); window.speechSynthesis.cancel(); } catch (e) {} };
+$("spSpeak").onclick = () => { spSpeak = !spSpeak; $("spSpeak").setAttribute("aria-pressed", spSpeak); if (!spSpeak) try { window.speechSynthesis.cancel(); } catch (e) {} };
+$("spForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const text = $("spIn").value.trim(); if (!text || spBusy) return;
+  if (!SAMPLE || (SAMPLE.ready && !SAMPLE.ready())) { spAdd("sys", navigator.onLine ? "No connection to Claude right now. Use the firing solution below." : "No signal. Use the firing solution below; the spotter comes back with signal."); return; }
+  $("spIn").value = ""; spAdd("me", text);
+  spTurns.push({ role: "user", content: text });
+  if (spTurns.length > 16) spTurns = spTurns.slice(-16);
+  while (spTurns.length && spTurns[0].role !== "user") spTurns.shift();
+  const bubble = spAdd("sp", "…"); spBusy = true; $("spSend").disabled = true;
+  spCtl = new AbortController();
+  try {
+    const { text: reply } = await SAMPLE([{ role: "user", content: SP_RULES }, ...spTurns], {
+      tools: SP_TOOLS, modelTier: "quick", signal: spCtl.signal,
+      onText: ({ text }) => { bubble.textContent = text; $("spLog").scrollTop = $("spLog").scrollHeight; }
+    });
+    const last = reply.split(/\n\s*\n/).pop().trim() || reply;
+    bubble.textContent = last; spTurns.push({ role: "assistant", content: last }); spSay(last);
+  } catch (err) {
+    const c = err && err.code;
+    if (c === "cancelled") { bubble.remove(); }
+    else {
+      bubble.className = "msg sys";
+      bubble.textContent = { not_granted: "The spotter wasn't allowed to use Claude. The firing solution below still works.", rate_limited: "Too many requests. Give it a minute.",
+        sampling_disabled: "Claude isn't available on this account.", tools_unavailable: "The spotter can't run in this view.", session_expired: "Sign in to Claude again to use the spotter.",
+        offline: "Lost signal. The firing solution below still works.", no_key: "Add your Claude API key under Online features to use the spotter.", bad_key: "Your Claude API key was rejected. Check it under Online features.", no_credit: "Your Claude API account is out of credit. Add credit at console.anthropic.com." }[c] || "Lost the connection. The firing solution below still works.";
+      spTurns.pop();
+    }
+  } finally { spBusy = false; $("spSend").disabled = !SAMPLE || (SAMPLE.ready && !SAMPLE.ready()); }
+});
+
+// ---------- Factory load library (all makers), search and favorites ----------
+const LIB = [{"maker":"Hornady","partNumber":"81066","line":"Custom Lite","bullet":"SST","weightGr":125,"mv":2700,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2412,"200":2143,"300":1891,"400":1660,"500":1454},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-125-gr-sst-custom-lite"},{"maker":"Hornady","partNumber":"8108","line":"American Whitetail","bullet":"InterLock SP","weightGr":150,"mv":2910,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2637,"200":2381,"300":2139,"400":1911,"500":1700},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-150-gr-interlock-sp-american-whitetail"},{"maker":"Hornady","partNumber":"81093","line":"Superformance","bullet":"SST","weightGr":150,"mv":3080,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2848,"200":2628,"300":2418,"400":2218,"500":2028},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-150-gr-sst-superformance"},{"maker":"Hornady","partNumber":"81124","line":"Superformance","bullet":"CX","weightGr":150,"mv":3080,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2850,"200":2631,"300":2423,"400":2224,"500":2035},"url":"https://www.hornady.com/ammunition/rifle/30-06-sprg-150-gr-cx-superformance"},{"maker":"Hornady","partNumber":"81108","line":"Outfitter","bullet":"CX","weightGr":150,"mv":3000,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2774,"200":2559,"300":2354,"400":2158,"500":1972},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-150-gr-cx-outfitter"},{"maker":"Hornady","partNumber":"81151","line":"American Whitetail TIPPED","bullet":"SST","weightGr":165,"mv":2900,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2689,"200":2488,"300":2296,"400":2113,"500":1938},"url":"https://www.hornady.com/ammunition/rifle/30-06-sprg-165-gr-sst-american-whitetail-tipped"},{"maker":"Hornady","partNumber":"81153","line":"Superformance","bullet":"SST","weightGr":165,"mv":2960,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2750,"200":2550,"300":2358,"400":2175,"500":2000},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-165-gr-sst-superformance"},{"maker":"Hornady","partNumber":"81169","line":"Superformance","bullet":"CX","weightGr":165,"mv":2940,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2728,"200":2525,"300":2332,"400":2147,"500":1970},"url":"https://www.hornady.com/ammunition/rifle/30-06-sprg-165-gr.-cx-superformance"},{"maker":"Hornady","partNumber":"81171","line":"Vintage Match (M1 Garand)","bullet":"ELD Match","weightGr":168,"mv":2710,"testBarrelIn":24,"bcG1":0.523,"bcG7":0.263,"vel":{"100":2540,"200":2376,"300":2218,"400":2066,"500":1920},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-168-gr-eld-m1-garand"},{"maker":"Hornady","partNumber":"81174","line":"Precision Hunter","bullet":"ELD-X","weightGr":178,"mv":2750,"testBarrelIn":24,"bcG1":0.552,"bcG7":0.278,"vel":{"100":2588,"200":2431,"300":2280,"400":2134,"500":1993},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-178-gr-eld-x-precision-hunter"},{"maker":"Hornady","partNumber":"81084","line":"American Whitetail","bullet":"InterLock SP","weightGr":180,"mv":2700,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2492,"200":2293,"300":2103,"400":1923,"500":1753},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-180-gr-interlock-sp-american-whitetail"},{"maker":"Hornady","partNumber":"81183","line":"Superformance","bullet":"SST","weightGr":180,"mv":2820,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2630,"200":2448,"300":2274,"400":2106,"500":1946},"url":"https://www.hornady.com/ammunition/rifle/30-06-springfield-180-gr-sst-superformance"},{"maker":"Hornady","partNumber":"811644","line":"Outfitter","bullet":"CX","weightGr":180,"mv":2700,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2511,"200":2330,"300":2156,"400":1989,"500":1831},"url":"https://www.hornady.com/ammunition/rifle/30-06-sprg-180-gr.-cx-outfitter"},{"maker":"Federal","partNumber":"P3006TA1","line":"Terminal Ascent","bullet":"Terminal Ascent","weightGr":175,"mv":2730,"testBarrelIn":null,"bcG1":0.52,"bcG7":0.258,"vel":{"100":2558,"200":2391,"300":2232,"400":2078,"500":1930},"url":"https://www.federalpremium.com/rifle/terminal-ascent/11-P3006TA1.html","discontinued":true},{"maker":"Federal","partNumber":"P3006TC2","line":"Trophy Copper","bullet":"Trophy Copper","weightGr":165,"mv":2800,"testBarrelIn":null,"bcG1":0.503,"bcG7":null,"vel":{"100":2619,"200":2445,"300":2278,"400":2118,"500":1963},"url":"https://www.federalpremium.com/rifle/trophy-copper/11-P3006TC2.html","discontinued":false},{"maker":"Federal","partNumber":"P3006TC1","line":"Trophy Copper","bullet":"Trophy Copper","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.523,"bcG7":null,"vel":{"100":2530,"200":2366,"300":2208,"400":2056,"500":1910},"url":"https://www.federalpremium.com/rifle/trophy-copper/11-P3006TC1.html","discontinued":false},{"maker":"Federal","partNumber":"P3006TT2","line":"Trophy Bonded Tip","bullet":"Trophy Bonded Tip","weightGr":165,"mv":2800,"testBarrelIn":null,"bcG1":0.45,"bcG7":null,"vel":{"100":2598,"200":2405,"300":2221,"400":2044,"500":1875},"url":"https://www.federalpremium.com/rifle/trophy-bonded-tip/11-P3006TT2.html","discontinued":false},{"maker":"Federal","partNumber":"P3006TT1","line":"Trophy Bonded Tip","bullet":"Trophy Bonded Tip","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.5,"bcG7":null,"vel":{"100":2522,"200":2351,"300":2186,"400":2029,"500":1877},"url":"https://www.federalpremium.com/rifle/trophy-bonded-tip/11-P3006TT1.html","discontinued":false},{"maker":"Federal","partNumber":"P3006AF","line":"Barnes TSX","bullet":"Barnes TSX","weightGr":165,"mv":2800,"testBarrelIn":null,"bcG1":0.398,"bcG7":null,"vel":{"100":2573,"200":2356,"300":2151,"400":1955,"500":1771},"url":"https://www.federalpremium.com/rifle/barnes-tsx/11-P3006AF.html","discontinued":false},{"maker":"Federal","partNumber":"P3006AE","line":"Barnes TSX","bullet":"Barnes TSX","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.453,"bcG7":null,"vel":{"100":2504,"200":2316,"300":2137,"400":1965,"500":1802},"url":"https://www.federalpremium.com/rifle/barnes-tsx/11-P3006AE.html","discontinued":false},{"maker":"Federal","partNumber":"P3006AD","line":"Nosler Partition","bullet":"Nosler Partition","weightGr":165,"mv":2830,"testBarrelIn":null,"bcG1":0.409,"bcG7":null,"vel":{"100":2607,"200":2395,"300":2193,"400":2000,"500":1818},"url":"https://www.federalpremium.com/rifle/nosler-partition/11-P3006AD.html","discontinued":true},{"maker":"Federal","partNumber":"P3006F","line":"Nosler Partition","bullet":"Nosler Partition","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.474,"bcG7":null,"vel":{"100":2512,"200":2332,"300":2160,"400":1995,"500":1837},"url":"https://www.federalpremium.com/rifle/nosler-partition/11-P3006F.html","discontinued":true},{"maker":"Federal","partNumber":"P3006BCH1","line":"Berger Hybrid Hunter","bullet":"Berger Hybrid","weightGr":168,"mv":2800,"testBarrelIn":null,"bcG1":0.489,"bcG7":0.251,"vel":{"100":2614,"200":2435,"300":2264,"400":2100,"500":1942},"url":"https://www.federalpremium.com/rifle/berger-hybrid-hunter/11-P3006BCH1.html","discontinued":false},{"maker":"Federal","partNumber":"P3006ELDX1","line":"ELD-X","bullet":"Hornady ELD-X","weightGr":178,"mv":2750,"testBarrelIn":null,"bcG1":0.552,"bcG7":null,"vel":{"100":2587,"200":2429,"300":2277,"400":2131,"500":1990},"url":"https://www.federalpremium.com/rifle/eld-x/11-P3006ELDX1.html","discontinued":true},{"maker":"Federal","partNumber":"P3006SS1","line":"Swift Scirocco II","bullet":"Swift Scirocco","weightGr":165,"mv":2800,"testBarrelIn":null,"bcG1":0.45,"bcG7":null,"vel":{"100":2598,"200":2405,"300":2221,"400":2044,"500":1875},"url":"https://www.federalpremium.com/rifle/swift-scirocco-ii/11-P3006SS1.html","discontinued":true},{"maker":"Federal","partNumber":"GM3006M","line":"Gold Medal","bullet":"Sierra MatchKing BTHP","weightGr":168,"mv":2700,"testBarrelIn":null,"bcG1":0.463,"bcG7":0.224,"vel":{"100":2508,"200":2324,"300":2148,"400":1980,"500":1819},"url":"https://www.federalpremium.com/rifle/gold-medal/gold-medal-sierra-matchking/11-GM3006M.html","discontinued":false,"note":"Match ammunition; not a hunting bullet. The maker's BC and its own velocity table don't fully agree (table fits G1 0.471); chronograph and true this load."},{"maker":"Federal","partNumber":"F3006FS1","line":"Fusion","bullet":"Fusion Soft Point","weightGr":150,"mv":2900,"testBarrelIn":null,"bcG1":0.41,"bcG7":null,"vel":{"100":2674,"200":2459,"300":2254,"400":2059,"500":1874},"url":"https://www.federalpremium.com/rifle/fusion/11-F3006FS1.html","discontinued":false},{"maker":"Federal","partNumber":"F3006FS2","line":"Fusion","bullet":"Fusion Soft Point","weightGr":165,"mv":2790,"testBarrelIn":null,"bcG1":0.454,"bcG7":null,"vel":{"100":2590,"200":2399,"300":2217,"400":2042,"500":1875},"url":"https://www.federalpremium.com/rifle/fusion/11-F3006FS2.html","discontinued":false},{"maker":"Federal","partNumber":"F3006FS3","line":"Fusion","bullet":"Fusion Soft Point","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.498,"bcG7":null,"vel":{"100":2521,"200":2349,"300":2185,"400":2026,"500":1874},"url":"https://www.federalpremium.com/rifle/fusion/11-F3006FS3.html","discontinued":false},{"maker":"Federal","partNumber":"F3006TFS3","line":"Fusion Tipped","bullet":"Fusion Tipped","weightGr":180,"mv":2725,"testBarrelIn":null,"bcG1":0.501,"bcG7":null,"vel":{"100":2546,"200":2375,"300":2210,"400":2051,"500":1899},"url":"https://www.federalpremium.com/rifle/fusion-tipped-rifle/11-F3006TFS3.html","discontinued":false},{"maker":"Federal","partNumber":"3006A","line":"Power-Shok","bullet":"Soft Point","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.313,"bcG7":null,"vel":{"100":2616,"200":2340,"300":2081,"400":1839,"500":1619},"url":"https://www.federalpremium.com/rifle/power-shok/11-3006A.html","discontinued":false},{"maker":"Federal","partNumber":"3006B","line":"Power-Shok","bullet":"Soft Point","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.385,"bcG7":null,"vel":{"100":2470,"200":2252,"300":2045,"400":1848,"500":1667},"url":"https://www.federalpremium.com/rifle/power-shok/11-3006B.html","discontinued":false},{"maker":"Federal","partNumber":"3006150LFA","line":"Power-Shok Copper","bullet":"Copper HP","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.278,"bcG7":null,"vel":{"100":2580,"200":2273,"300":1988,"400":1725,"500":1491},"url":"https://www.federalpremium.com/rifle/power-shok-copper-rifle/11-3006150LFA.html","discontinued":false},{"maker":"Federal","partNumber":"AE3006M1","line":"American Eagle","bullet":"Full Metal Jacket","weightGr":150,"mv":2740,"testBarrelIn":null,"bcG1":0.41,"bcG7":null,"vel":{"100":2522,"200":2314,"300":2116,"400":1928,"500":1751},"url":"https://www.federalpremium.com/rifle/american-eagle/american-eagle-rifle/11-AE3006M1.html","discontinued":false,"note":"Full metal jacket target ammo; not a hunting bullet."},{"maker":"Federal","partNumber":"AE3006N","line":"American Eagle","bullet":"FMJ Boat-Tail","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.408,"bcG7":null,"vel":null,"url":"https://www.federalpremium.com/rifle/american-eagle/american-eagle-rifle/11-AE3006N.html","discontinued":false,"note":"Full metal jacket target ammo; not a hunting bullet."},{"maker":"Winchester","partNumber":"S3006LR","line":"Expedition Big Game","bullet":"AccuBond Long Range","weightGr":190,"mv":2750,"testBarrelIn":null,"bcG1":0.597,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Expedition-Big-Game/S3006LR","discontinued":false},{"maker":"Winchester","partNumber":"S3006BC","line":"Supreme Long Range","bullet":"BC MAX","weightGr":195,"mv":2570,"testBarrelIn":null,"bcG1":0.589,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Supreme-Long-Range/S3006BC","discontinued":false},{"maker":"Winchester","partNumber":"SBST3006","line":"Ballistic Silvertip","bullet":"Ballistic Silvertip","weightGr":150,"mv":2900,"testBarrelIn":null,"bcG1":0.435,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Ballistic-Silvertip/SBST3006","discontinued":false},{"maker":"Winchester","partNumber":"SBST3006B","line":"Ballistic Silvertip","bullet":"Ballistic Silvertip","weightGr":180,"mv":2750,"testBarrelIn":null,"bcG1":0.507,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Ballistic-Silvertip/SBST3006B","discontinued":false},{"maker":"Winchester","partNumber":"X3006CLF","line":"Copper Impact","bullet":"Copper Extreme Point","weightGr":150,"mv":2920,"testBarrelIn":null,"bcG1":0.387,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Copper-Impact/X3006CLF","discontinued":false},{"maker":"Winchester","partNumber":"X3006CLF2","line":"Copper Impact","bullet":"Copper Extreme Point","weightGr":180,"mv":2725,"testBarrelIn":null,"bcG1":0.47,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Copper-Impact/X3006CLF2","discontinued":false},{"maker":"Winchester","partNumber":"X3006DS","line":"Deer Season XP","bullet":"Extreme Point","weightGr":150,"mv":2920,"testBarrelIn":null,"bcG1":0.392,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Deer-Season-XP/X3006DS","discontinued":false},{"maker":"Winchester","partNumber":"X3006DS2","line":"Deer Season XP","bullet":"Extreme Point","weightGr":180,"mv":2750,"testBarrelIn":null,"bcG1":0.422,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Deer-Season-XP/X3006DS2","discontinued":false},{"maker":"Winchester","partNumber":"X30061BP","line":"Power Max Bonded","bullet":"Bonded Protected Hollow Point","weightGr":150,"mv":2920,"testBarrelIn":null,"bcG1":0.325,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Power-Max-Bonded/X30061BP","discontinued":false},{"maker":"Winchester","partNumber":"X30064BP","line":"Power Max Bonded","bullet":"Bonded Protected Hollow Point","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.394,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Power-Max-Bonded/X30064BP","discontinued":false},{"maker":"Winchester","partNumber":"X30061","line":"Power-Point","bullet":"Power-Point","weightGr":150,"mv":2920,"testBarrelIn":null,"bcG1":0.294,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Power-Point/X30061","discontinued":false},{"maker":"Winchester","partNumber":"X30065","line":"Power-Point","bullet":"Power-Point","weightGr":165,"mv":2800,"testBarrelIn":null,"bcG1":0.341,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Power-Point/X30065","discontinued":false},{"maker":"Winchester","partNumber":"X30064","line":"Power-Point","bullet":"Power-Point","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.381,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Power-Point/X30064","discontinued":false},{"maker":"Winchester","partNumber":"X30062","line":"Super X","bullet":"Pointed Soft Point","weightGr":125,"mv":3140,"testBarrelIn":null,"bcG1":0.268,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/Super-X/X30062","discontinued":false},{"maker":"Winchester","partNumber":"USA3006","line":"USA","bullet":"Full Metal Jacket","weightGr":147,"mv":3020,"testBarrelIn":null,"bcG1":0.421,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/USA/USA3006","discontinued":false,"note":"Full metal jacket target ammo; not a hunting bullet."},{"maker":"Winchester","partNumber":"WIN3006M2","line":"M1 Garand","bullet":"Full Metal Jacket","weightGr":150,"mv":2740,"testBarrelIn":null,"bcG1":0.42,"bcG7":null,"vel":null,"url":"https://winchester.com/Products/Ammunition/Rifle/M1-Garand/WIN3006M2","discontinued":false,"note":"Full metal jacket, reduced-pressure M1 Garand load; not a hunting bullet."},{"maker":"Remington","partNumber":"29037","line":"Core-Lokt Tipped","bullet":"Core-Lokt Tipped","weightGr":180,"mv":2745,"testBarrelIn":null,"bcG1":0.48,"bcG7":null,"vel":{"100":2558,"200":2378,"300":2206,"400":2041,"500":1883},"url":"https://www.remington.com/rifle/core-lokt-tipped/29-29037.html","discontinued":false},{"maker":"Remington","partNumber":"29035","line":"Core-Lokt Tipped","bullet":"Core-Lokt Tipped","weightGr":165,"mv":2820,"testBarrelIn":null,"bcG1":0.447,"bcG7":null,"vel":{"100":2616,"200":2421,"300":2234,"400":2056,"500":1886},"url":"https://www.remington.com/rifle/core-lokt-tipped/29-29035.html","discontinued":false},{"maker":"Remington","partNumber":"29027","line":"Core-Lokt Tipped","bullet":"Core-Lokt Tipped","weightGr":150,"mv":2930,"testBarrelIn":null,"bcG1":0.415,"bcG7":null,"vel":{"100":2705,"200":2492,"300":2287,"400":2093,"500":1908},"url":"https://www.remington.com/rifle/core-lokt-tipped/29-29027.html","discontinued":false},{"maker":"Remington","partNumber":"21401","line":"Core-Lokt","bullet":"Pointed Soft Point Core-Lokt","weightGr":125,"mv":3140,"testBarrelIn":null,"bcG1":0.268,"bcG7":null,"vel":{"100":2780,"200":2448,"300":2140,"400":1854,"500":1597},"url":"https://www.remington.com/rifle/shop-by-caliber/shop-all-calibers/29-21401.html","discontinued":false},{"maker":"Remington","partNumber":"27826","line":"Core-Lokt","bullet":"Pointed Soft Point Core-Lokt","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.314,"bcG7":null,"vel":{"100":2617,"200":2341,"300":2083,"400":1842,"500":1622},"url":"https://www.remington.com/rifle/shop-by-caliber/shop-all-calibers/29-27826.html","discontinued":false},{"maker":"Remington","partNumber":"R21415","line":"Core-Lokt","bullet":"Pointed Soft Point Core-Lokt","weightGr":165,"mv":2800,"testBarrelIn":null,"bcG1":0.339,"bcG7":null,"vel":{"100":2534,"200":2283,"300":2047,"400":1825,"500":1622},"url":"https://www.remington.com/rifle/shop-by-caliber/shop-all-calibers/29-R21415.html","discontinued":false},{"maker":"Remington","partNumber":"27828","line":"Core-Lokt","bullet":"Pointed Soft Point Core-Lokt","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.383,"bcG7":null,"vel":{"100":2469,"200":2250,"300":2041,"400":1844,"500":1663},"url":"https://www.remington.com/rifle/shop-by-caliber/shop-all-calibers/29-27828.html","discontinued":false},{"maker":"Remington","partNumber":"21407","line":"Core-Lokt","bullet":"Core-Lokt Soft Point","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.248,"bcG7":null,"vel":{"100":2348,"200":2024,"300":1728,"400":1466,"500":1252},"url":"https://www.remington.com/rifle/shop-by-caliber/shop-all-calibers/29-21407.html","discontinued":false,"note":"Listed as currently unavailable."},{"maker":"Remington","partNumber":"R27830","line":"Core-Lokt","bullet":"Core-Lokt Soft Point","weightGr":220,"mv":2410,"testBarrelIn":null,"bcG1":0.294,"bcG7":null,"vel":{"100":2130,"200":1869,"300":1633,"400":1421,"500":1246},"url":"https://www.remington.com/rifle/shop-by-caliber/shop-all-calibers/29-R27830.html","discontinued":false},{"maker":"Remington","partNumber":"R27853","line":"Core-Lokt Copper","bullet":"Copper HP","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.278,"bcG7":null,"vel":{"100":2580,"200":2273,"300":1988,"400":1725,"500":1491},"url":"https://www.remington.com/rifle/shop-by-caliber/shop-all-calibers/29-R27853.html","discontinued":false},{"maker":"Remington","partNumber":"29318","line":"Premier Scirocco","bullet":"Swift Scirocco Bonded","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.435,"bcG7":null,"vel":{"100":2696,"200":2493,"300":2298,"400":2112,"500":1934},"url":"https://www.remington.com/rifle/premier-scirocco/29-29318.html","discontinued":false},{"maker":"Remington","partNumber":"29328","line":"Premier Scirocco","bullet":"Swift Scirocco Bonded","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.5,"bcG7":null,"vel":{"100":2522,"200":2351,"300":2186,"400":2029,"500":1877},"url":"https://www.remington.com/rifle/premier-scirocco/29-29328.html","discontinued":false},{"maker":"Remington","partNumber":"R22343","line":"Premier CuT","bullet":"Copper Tipped","weightGr":150,"mv":2930,"testBarrelIn":null,"bcG1":0.44,"bcG7":null,"vel":{"100":2718,"200":2515,"300":2321,"400":2137,"500":1960},"url":"https://www.remington.com/rifle/premier-cut/29-R22343.html","discontinued":false,"note":"Remington lists 150 gr; some retailers list 165 gr. Check your box."},{"maker":"Remington","partNumber":"R21344","line":"Premier Long Range","bullet":"Speer Impact","weightGr":172,"mv":2825,"testBarrelIn":null,"bcG1":0.522,"bcG7":0.265,"vel":{"100":2650,"200":2481,"300":2318,"400":2162,"500":2011},"url":"https://www.remington.com/rifle/premier-long-range/29-R21344.html","discontinued":false},{"maker":"Remington","partNumber":"23699","line":"UMC Rifle","bullet":"Full Metal Jacket","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.314,"bcG7":null,"vel":{"100":2617,"200":2341,"300":2083,"400":1842,"500":1622},"url":"https://www.remington.com/rifle/umc-rifle/29-23699.html","discontinued":false,"note":"Full metal jacket target ammo; not a hunting bullet."},{"maker":"Remington","partNumber":"29009","line":"Hypersonic Bonded","bullet":"Core-Lokt Ultra Bonded PSP","weightGr":180,"mv":2830,"testBarrelIn":null,"bcG1":0.402,"bcG7":null,"vel":{"100":2603,"200":2387,"300":2182,"400":1987,"500":1803},"url":"https://www.remington.com/rifle/hypersonic-bonded/29-29009.html","discontinued":true},{"maker":"Nosler","partNumber":"40068","line":"Ballistic Tip Hunting","bullet":"Ballistic Tip","weightGr":125,"mv":3100,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2836,"200":2587,"300":2351,"400":2128,"500":1918},"url":"https://www.nosler.com/30-06-springfield-125gr-ballistic-tip-hunting-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"40043","line":"Ballistic Tip Hunting","bullet":"Ballistic Tip","weightGr":165,"mv":2950,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2749,"200":2557,"300":2372,"400":2196,"500":2027},"url":"https://www.nosler.com/30-06-springfield-165gr-ballistic-tip-hunting-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"40072","line":"Ballistic Tip Hunting","bullet":"Ballistic Tip","weightGr":180,"mv":2750,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2572,"200":2400,"300":2236,"400":2078,"500":1926},"url":"https://www.nosler.com/30-06-springfield-180gr-ballistic-tip-hunting-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"40036","line":"E-Tip","bullet":"E-Tip (lead-free)","weightGr":168,"mv":2800,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2618,"200":2444,"300":2276,"400":2115,"500":1961},"url":"https://www.nosler.com/30-06-springfield-168gr-expansion-tip-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"40037","line":"E-Tip","bullet":"E-Tip (lead-free)","weightGr":180,"mv":2750,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2578,"200":2412,"300":2252,"400":2098,"500":1952},"url":"https://www.nosler.com/30-06-springfield-180gr-expansion-tip-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"60055","line":"Trophy Grade","bullet":"Partition","weightGr":150,"mv":3000,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2755,"200":2523,"300":2302,"400":2093,"500":1895},"url":"https://www.nosler.com/30-06-springfield-150gr-partition-trophy-grade-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"61018","line":"Trophy Grade","bullet":"Partition","weightGr":165,"mv":2950,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2718,"200":2497,"300":2287,"400":2088,"500":1898},"url":"https://www.nosler.com/30-06-springfield-165gr-partition-trophy-grade-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"46142","line":"Trophy Grade (RMEF)","bullet":"Partition","weightGr":180,"mv":2750,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2559,"200":2377,"300":2202,"400":2035,"500":1875},"url":"https://www.nosler.com/30-06-springfield-180gr-partition-trophy-grade-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"60057","line":"Trophy Grade","bullet":"AccuBond","weightGr":165,"mv":2950,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2749,"200":2557,"300":2372,"400":2196,"500":2027},"url":"https://www.nosler.com/30-06-springfield-165gr-accubond-trophy-grade-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"46134","line":"Trophy Grade","bullet":"AccuBond","weightGr":180,"mv":2750,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2572,"200":2400,"300":2236,"400":2078,"500":1926},"url":"https://www.nosler.com/30-06-springfield-180gr-accubond-trophy-grade-ammunition.html","discontinued":false},{"maker":"Nosler","partNumber":"60102","line":"Trophy Grade Long Range","bullet":"AccuBond Long Range","weightGr":168,"mv":2800,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":{"100":2625,"200":2456,"300":2293,"400":2137,"500":1987},"url":"https://www.nosler.com/30-06-springfield-168gr-accubond-long-range-trophy-grade-ammunition.html","discontinued":false,"minExp":1300},{"maker":"Nosler","partNumber":"40132","line":"Whitetail Country","bullet":"Solid Base BT","weightGr":150,"mv":null,"testBarrelIn":24,"bcG1":0.398,"bcG7":null,"vel":null,"url":"https://www.nosler.com/30-06-win-150gr-whitetail-country-ammunition.html","discontinued":false,"noData":true,"note":""},{"maker":"Nosler","partNumber":"40125","line":"Whitetail Country","bullet":"Solid Base BT","weightGr":165,"mv":null,"testBarrelIn":24,"bcG1":0.442,"bcG7":null,"vel":null,"url":"https://www.nosler.com/30-06-sprng-165gr-whitetail-country-ammunition.html","discontinued":false,"noData":true,"note":""},{"maker":"Nosler","partNumber":"40147","line":"Whitetail Country","bullet":"Solid Base BT","weightGr":180,"mv":null,"testBarrelIn":24,"bcG1":0.491,"bcG7":null,"vel":null,"url":"https://www.nosler.com/30-06-sprng-180gr-whitetail-country-ammunition.html","discontinued":false,"noData":true,"note":""},{"maker":"Barnes","partNumber":"21531","line":"VOR-TX","bullet":"TTSX BT (copper)","weightGr":150,"mv":3000,"testBarrelIn":24,"bcG1":0.44,"bcG7":null,"vel":{"100":2784,"200":2579,"300":2382,"400":2195,"500":2015},"url":"https://barnesbullets.com/vor-tx-rifle-ttsx-30-06-sprg/","discontinued":false},{"maker":"Barnes","partNumber":"21565","line":"VOR-TX","bullet":"TTSX BT (copper)","weightGr":168,"mv":2850,"testBarrelIn":24,"bcG1":0.47,"bcG7":null,"vel":{"100":2654,"200":2467,"300":2288,"400":2116,"500":1951},"url":"https://barnesbullets.com/vor-tx-rifle-ttsx-30-06-sprg/","discontinued":false},{"maker":"Barnes","partNumber":"21533","line":"VOR-TX","bullet":"TTSX BT (copper)","weightGr":180,"mv":2750,"testBarrelIn":24,"bcG1":0.484,"bcG7":null,"vel":{"100":2564,"200":2386,"300":2215,"400":2050,"500":1894},"url":"https://barnesbullets.com/vor-tx-rifle-ttsx-30-06-sprg/","discontinued":false},{"maker":"Barnes","partNumber":"30748","line":"VOR-TX LR","bullet":"LRX BT (copper)","weightGr":175,"mv":2800,"testBarrelIn":24,"bcG1":0.508,"bcG7":null,"vel":{"100":2621,"200":2449,"300":2283,"400":2124,"500":1971},"url":"https://barnesbullets.com/vor-tx-lr-lrx-30-06-sprg-175-gr-bt/","discontinued":false},{"maker":"Barnes","partNumber":"32238","line":"VOR-TX Reduced Recoil","bullet":"TTSX BT (copper)","weightGr":130,"mv":2760,"testBarrelIn":24,"bcG1":0.337,"bcG7":null,"vel":{"100":2495,"200":2245,"300":2010,"400":null,"500":null},"url":"https://barnesbullets.com/vor-tx-rr-ttsx-30-06-sprg-130-gr-bt/","discontinued":false},{"maker":"Barnes","partNumber":"32403","line":"Harvest Collection","bullet":"Sierra Tipped GameKing","weightGr":180,"mv":2760,"testBarrelIn":24,"bcG1":0.545,"bcG7":null,"vel":{"100":2594,"200":2434,"300":2280,"400":2132,"500":1989},"url":"https://barnesbullets.com/harvest-collection-30-06/","discontinued":false},{"maker":"Browning","partNumber":"B192530061","line":"Long Range Pro","bullet":"Sierra Tipped MatchKing","weightGr":195,"mv":2650,"testBarrelIn":null,"bcG1":0.61,"bcG7":null,"vel":null,"url":"https://browningammo.com/Products/Ammunition/Rifle/Long-Range-Pro/B192530061","discontinued":false,"note":"Box markets it for paper and steel targets; a match bullet, not a hunting bullet."},{"maker":"Browning","partNumber":"B192530062","line":"Long Range Pro Hunter","bullet":"Sierra Tipped GameKing","weightGr":180,"mv":2745,"testBarrelIn":null,"bcG1":0.515,"bcG7":null,"vel":null,"url":"https://browningammo.com/Products/Ammunition/Rifle/Long-Range-Pro-Hunter/B192530062","discontinued":false},{"maker":"Browning","partNumber":"B192430061","line":"BXS Copper Expansion","bullet":"Tipped solid copper","weightGr":180,"mv":2750,"testBarrelIn":null,"bcG1":0.485,"bcG7":null,"vel":null,"url":"https://browningammo.com/Products/Ammunition/Rifle/BXS-Copper-Expansion/B192430061","discontinued":false},{"maker":"Browning","partNumber":"B192630061","line":"Silver Series","bullet":"Plated Soft Point","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.381,"bcG7":null,"vel":null,"url":"https://browningammo.com/Products/Ammunition/Rifle/Silver-Series/B192630061","discontinued":false},{"maker":"Browning","partNumber":"B192130062","line":"Max Point","bullet":"Polymer Tip","weightGr":180,"mv":2750,"testBarrelIn":null,"bcG1":0.422,"bcG7":null,"vel":null,"url":"https://browningammo.com/Products/Ammunition/Rifle/Max-Point/B192130062","discontinued":false},{"maker":"Norma","partNumber":"20178302","line":"ODIN","bullet":"Tipped Expanding BT-LF","weightGr":180,"mv":2707,"testBarrelIn":24,"bcG1":0.462,"bcG7":null,"vel":{"100":2511,"200":2324,"300":2144,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-odin/norma-odin-30-06-spring-180gr---20178302","discontinued":false,"note":"Labelled NEW 2026. Imperial table rows labelled only V100-V300; treated as yards. Metric: 825/760/698/638 m/s at 0/100/200/300 m."},{"maker":"Norma","partNumber":"20178222","line":"ODIN","bullet":"Tipped Expanding BT-LF","weightGr":162,"mv":2854,"testBarrelIn":24,"bcG1":0.416,"bcG7":null,"vel":{"100":2630,"200":2416,"300":2213,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-odin/norma-odin-30-06-spring-162gr---20178222","discontinued":false,"note":"Labelled NEW 2026. Imperial rows labelled only V100-V300; treated as yards. Metric: 870/795/725/658 m/s at 0/100/200/300 m."},{"maker":"Norma","partNumber":"20178030","line":"Range & Training Lead Free Indoor","bullet":"HPBT - Zinc","weightGr":110,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.norma-ammunition.com/products/shooting/norma-range-and-training-indoor/norma-range-training-lead-free-indoor-30-06-springfield-110gr---20178030","discontinued":false,"note":"Page gives no ballistic data.","noData":true},{"maker":"Norma","partNumber":"20177682","line":"TIPSTRIKE","bullet":"Tipped SP","weightGr":150,"mv":2920,"testBarrelIn":24,"bcG1":0.347,"bcG7":null,"vel":{"100":2649,"200":2393,"300":2152,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-tipstrike/norma-tipstrike-30-06-springfield-150gr---20177682","discontinued":false,"note":"Imperial rows labelled only V100-V300; treated as yards. Metric: 890/800/715/636 m/s."},{"maker":"Norma","partNumber":"20174342","line":"TIPSTRIKE","bullet":"Tipped SP","weightGr":170,"mv":2789,"testBarrelIn":24,"bcG1":0.454,"bcG7":null,"vel":{"100":2589,"200":2399,"300":2216,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-tipstrike/norma-tipstrike-30-06-springfield-170gr---20174342","discontinued":false,"note":"Found by search; not among the 10 items visible on the caliber page. Metric: 850/784/720/660 m/s."},{"maker":"Norma","partNumber":"20177610","line":"Range & Training","bullet":"FMJ","weightGr":150,"mv":2690,"testBarrelIn":24,"bcG1":0.41,"bcG7":null,"vel":{"100":2471,"200":2262,"300":2063,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/shooting/norma-range-and-training/norma-range-training-30-06-springfield-150-gr---20177610","discontinued":false,"note":"Metric: 820/747/678/612 m/s."},{"maker":"Norma","partNumber":"20177602","line":"Whitetail","bullet":"SP","weightGr":180,"mv":2700,"testBarrelIn":24,"bcG1":0.257,"bcG7":null,"vel":{"100":2360,"200":2045,"300":1757,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-whitetail/norma-whitetail-30-06-springfield-180gr---20177602","discontinued":false,"note":"Metric: 823/710/606/512 m/s."},{"maker":"Norma","partNumber":"20177392","line":"Whitetail","bullet":"SP","weightGr":150,"mv":2887,"testBarrelIn":24,"bcG1":0.274,"bcG7":null,"vel":{"100":2548,"200":2234,"300":1942,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-whitetail/norma-whitetail-30-06-springfield-150-gr---20177392","discontinued":false,"note":"Metric: 880/767/664/568 m/s."},{"maker":"Norma","partNumber":"20177572","line":"ECOSTRIKE","bullet":"Tipped Expanding BT-LF","weightGr":150,"mv":2953,"testBarrelIn":24,"bcG1":0.376,"bcG7":null,"vel":{"100":2700,"200":2461,"300":2234,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-ecostrike/norma-ecostrike-30-06-springfield-150gr---20177572","discontinued":false,"note":"Metric: 900/816/737/662 m/s."},{"maker":"Norma","partNumber":"20177492","line":"ECOSTRIKE","bullet":"Tipped Expanding BT-LF","weightGr":165,"mv":2822,"testBarrelIn":24,"bcG1":0.431,"bcG7":null,"vel":{"100":2607,"200":2401,"300":2205,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-ecostrike/norma-ecostrike-30-06-springfield-165gr---20177492","discontinued":false,"note":"Metric: 860/788/720/656 m/s."},{"maker":"Norma","partNumber":"20177552","line":"Ecostrike Silencer","bullet":"Tipped Expanding BT-LF","weightGr":150,"mv":2838,"testBarrelIn":20,"bcG1":0.376,"bcG7":null,"vel":{"100":2591,"200":2358,"300":2137,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-ecostrike-silencer-series/norma-ecostrike-silencer-30-06-spring-150-gr---20177552","discontinued":true,"note":"Labelled 'Discontinued 2026'. Metric: 865/783/706/633 m/s."},{"maker":"Norma","partNumber":"20177532","line":"Tipstrike Silencer","bullet":"Tipped SP","weightGr":170,"mv":2740,"testBarrelIn":20,"bcG1":0.454,"bcG7":null,"vel":{"100":2539,"200":2347,"300":2164,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-tipstrike-silencer-series/norma-tipstrike-silencer-30-06-springfield-170-gr---20177532","discontinued":false,"note":"Metric: 835/768/705/644 m/s."},{"maker":"Norma","partNumber":"20177282","line":"Oryx Silencer","bullet":"Bonded SP","weightGr":180,"mv":2690,"testBarrelIn":20,"bcG1":0.354,"bcG7":null,"vel":{"100":2437,"200":2197,"300":1972,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-oryx-silencer-series/norma-oryx-silencer-30-06-springfield-180-gr---20177282","discontinued":true,"note":"Labelled 'Discontinued 2026'. Metric: 820/736/657/582 m/s."},{"maker":"Norma","partNumber":"20174742","line":"Oryx","bullet":"Bonded SP","weightGr":180,"mv":2700,"testBarrelIn":24,"bcG1":0.354,"bcG7":null,"vel":{"100":2451,"200":2215,"300":1992,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-oryx/norma-oryx-30-06-springfield-180gr---20174742","discontinued":false,"note":"Metric: 823/740/662/589 m/s. Norma USA's page for the same SKU also shows 2700 fps, BC 0.354, 24 in."},{"maker":"Norma","partNumber":"20176772","line":"Oryx","bullet":"Bonded SP","weightGr":200,"mv":2625,"testBarrelIn":24,"bcG1":0.338,"bcG7":null,"vel":{"100":2368,"200":2126,"300":1899,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-oryx/norma-oryx-30-06-springfield-200gr---20176772","discontinued":false,"note":"Metric: 800/715/635/560 m/s."},{"maker":"Norma","partNumber":"20176422","line":"BONDSTRIKE","bullet":"Tipped Bonded BT-SP","weightGr":180,"mv":2756,"testBarrelIn":24,"bcG1":0.615,"bcG7":null,"vel":{"100":2609,"200":2467,"300":2329,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-bondstrike/norma-bondstrike-30-06-springfield-180gr---20176422","discontinued":false,"note":"Metric: 840/791/744/698 m/s."},{"maker":"Norma","partNumber":"20177342","line":"EVOSTRIKE","bullet":"Tipped Fragmenting BT-LF","weightGr":139,"mv":2986,"testBarrelIn":24,"bcG1":0.318,"bcG7":null,"vel":{"100":2686,"200":2405,"300":2142,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-evostrike/norma-evostrike-30-06-springfield-139gr---20177342","discontinued":false,"note":"Metric: 910/810/718/631 m/s."},{"maker":"Norma","partNumber":"20176592","line":"VULKAN","bullet":"SP","weightGr":180,"mv":2700,"testBarrelIn":24,"bcG1":0.315,"bcG7":null,"vel":{"100":2421,"200":2158,"300":1913,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-vulkan/norma-vulkan-30-06-springfield-180gr---20176592","discontinued":false,"note":"Metric: 823/730/643/563 m/s."},{"maker":"Norma","partNumber":"20176532","line":"Plastic Point","bullet":"Tipped SP","weightGr":180,"mv":2700,"testBarrelIn":24,"bcG1":0.366,"bcG7":null,"vel":{"100":2459,"200":2230,"300":2013,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-plastic-point/norma-plastic-point-30-06-springfield-180gr---20176532","discontinued":false,"note":"Metric: 823/743/667/596 m/s."},{"maker":"Norma","partNumber":"20176510","line":"Jaktmatch","bullet":"FMJ","weightGr":150,"mv":2772,"testBarrelIn":24,"bcG1":0.423,"bcG7":null,"vel":{"100":2559,"200":2356,"300":2162,"400":null,"500":null},"url":"https://www.norma-ammunition.com/products/hunting/norma-jaktmatch/norma-jaktmatch-30-06-springfield-150gr---20176510","discontinued":false,"note":"Page prints barrel as '610 cm / 24 in'. Metric: 845/774/706/642 m/s."},{"maker":"Sako","partNumber":null,"line":"Super Hammerhead","bullet":"Bonded SP","weightGr":150,"mv":2953,"testBarrelIn":null,"bcG1":0.263,"bcG7":null,"vel":null,"url":"https://www.sako.global/ammunition/super-hammerhead","discontinued":false,"note":"Line table gives 900 m/s; no item number. Page shows 6 of 8 products, so the 180 gr Super Hammerhead (retail MPN C631236ASA10X) wasn't visible. BC type not labelled."},{"maker":"Sako","partNumber":null,"line":"Powerhead Blade Pro","bullet":"Lead-free monolithic (Blade Pro)","weightGr":162,"mv":2789,"testBarrelIn":null,"bcG1":0.48,"bcG7":null,"vel":null,"url":"https://www.sako.global/ammunition/powerhead-blade-pro","discontinued":false,"note":"Line table gives 850 m/s; no item number. BC type not labelled."},{"maker":"Sako","partNumber":null,"line":"Speedhead","bullet":"FMJ target","weightGr":123,"mv":3068,"testBarrelIn":null,"bcG1":0.273,"bcG7":null,"vel":null,"url":"https://www.sako.global/ammunition/speedhead","discontinued":false,"note":"Line table gives 935 m/s; no item number. BC type not labelled."},{"maker":"Sellier & Bellot","partNumber":"V331622","line":"SP","bullet":"SP","weightGr":180,"mv":2707,"testBarrelIn":23.6,"bcG1":0.298,"bcG7":0.15,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-sp/detail/138","discontinued":false,"note":"600 mm barrel. Metric vel 0/100/200/300/400 m: 825/725/633/548/468 m/s."},{"maker":"Sellier & Bellot","partNumber":"V340912","line":"SPCE","bullet":"SPCE","weightGr":150,"mv":2953,"testBarrelIn":23.6,"bcG1":0.29,"bcG7":0.146,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-spce/detail/137","discontinued":false,"note":"Metric 0-400 m: 900/793/693/601/515 m/s."},{"maker":"Sellier & Bellot","partNumber":"V331772","line":"SPCE","bullet":"SPCE","weightGr":180,"mv":2641,"testBarrelIn":23.6,"bcG1":0.353,"bcG7":0.176,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-spce/detail/136","discontinued":false,"note":"Metric 0-400 m: 805/721/642/568/499 m/s."},{"maker":"Sellier & Bellot","partNumber":"V331652","line":"FMJ","bullet":"FMJ","weightGr":147,"mv":2920,"testBarrelIn":23.6,"bcG1":0.407,"bcG7":0.204,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-fmj/detail/134","discontinued":false,"note":"Metric 0-400 m: 890/813/740/670/605 m/s."},{"maker":"Sellier & Bellot","partNumber":"V331792","line":"FMJ","bullet":"FMJ","weightGr":180,"mv":2674,"testBarrelIn":23.6,"bcG1":0.498,"bcG7":0.25,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-fmj/detail/139","discontinued":false,"note":"Metric 0-400 m: 815/755/697/642/590 m/s."},{"maker":"Sellier & Bellot","partNumber":"V340812","line":"Tactical/Training FMJ","bullet":"FMJ","weightGr":124,"mv":3097,"testBarrelIn":23.6,"bcG1":0.379,"bcG7":0.191,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-training-fmj/detail/551","discontinued":false,"note":"Metric 0-400 m: 944/860/779/703/631 m/s."},{"maker":"Sellier & Bellot","partNumber":"V331682","line":"Tactical/Training FMJ","bullet":"FMJ","weightGr":147,"mv":2920,"testBarrelIn":23.6,"bcG1":0.407,"bcG7":0.204,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-training-fmj/detail/217","discontinued":false,"note":"Metric 0-400 m: 890/813/740/670/605 m/s (same data as V331652)."},{"maker":"Sellier & Bellot","partNumber":"V331692","line":"Tactical/Training FMJ","bullet":"FMJ","weightGr":180,"mv":2674,"testBarrelIn":23.6,"bcG1":0.498,"bcG7":0.25,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-training-fmj/detail/218","discontinued":false,"note":"Metric 0-400 m: 815/755/697/642/590 m/s."},{"maker":"Sellier & Bellot","partNumber":"V341332","line":"Tactical/Training FMJ (M1 Garand)","bullet":"FMJ","weightGr":150,"mv":2700,"testBarrelIn":23.6,"bcG1":0.405,"bcG7":0.203,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-training-fmj/detail/562","discontinued":false,"note":"Loaded for M1 Garand. Metric 0-400 m: 823/749/679/612/550 m/s."},{"maker":"Sellier & Bellot","partNumber":"V342102","line":"eXergy Blue","bullet":"TXRG","weightGr":165,"mv":2785,"testBarrelIn":23.6,"bcG1":0.398,"bcG7":0.2,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-with-exergy-blue-bullets/detail/505","discontinued":false,"note":"Metric 0-400 m: 849/772/700/631/567 m/s."},{"maker":"Sellier & Bellot","partNumber":"V342442","line":"eXergy Blue","bullet":"TXRG","weightGr":180,"mv":2654,"testBarrelIn":23.6,"bcG1":0.442,"bcG7":0.222,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-with-exergy-blue-bullets/detail/789","discontinued":false,"note":"Metric 0-400 m: 809/742/678/617/559 m/s."},{"maker":"Sellier & Bellot","partNumber":"V342612","line":"eXergy","bullet":"XRG","weightGr":180,"mv":2654,"testBarrelIn":23.6,"bcG1":0.287,"bcG7":0.144,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-with-exergy-bullets/detail/208","discontinued":false,"note":"Metric 0-400 m: 809/707/612/525/443 m/s."},{"maker":"Sellier & Bellot","partNumber":"V343042","line":"eXergy Edge","bullet":"EDGE","weightGr":165,"mv":2785,"testBarrelIn":23.6,"bcG1":0.357,"bcG7":0.179,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/exergy-edge/detail/831","discontinued":false,"note":"Metric 0-400 m: 849/764/683/608/538 m/s."},{"maker":"Sellier & Bellot","partNumber":"V343002","line":"eXergy Edge","bullet":"EDGE","weightGr":180,"mv":2654,"testBarrelIn":23.6,"bcG1":0.379,"bcG7":0.19,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/exergy-edge/detail/837","discontinued":false,"note":"Metric 0-400 m: 809/731/657/587/522 m/s."},{"maker":"Sellier & Bellot","partNumber":"V331632","line":"HPC","bullet":"HPC","weightGr":180,"mv":2671,"testBarrelIn":23.6,"bcG1":0.546,"bcG7":0.275,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-hpc/detail/135","discontinued":false,"note":"Metric 0-400 m: 814/759/707/656/608 m/s."},{"maker":"Sellier & Bellot","partNumber":"V331732","line":"Hunting with Sierra bullets","bullet":"SBT (Sierra Spitzer Boat Tail)","weightGr":180,"mv":2579,"testBarrelIn":23.6,"bcG1":0.434,"bcG7":0.218,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-hunting-ammunition-with-sierra-bullets/detail/118","discontinued":false,"note":"Metric 0-400 m: 786/719/655/594/536 m/s."},{"maker":"Sellier & Bellot","partNumber":"V331742","line":"PTS","bullet":"PTS","weightGr":180,"mv":2592,"testBarrelIn":23.6,"bcG1":0.495,"bcG7":0.25,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/hunting-rifle-ammunition-with-pts-bullets/detail/227","discontinued":false,"note":"Metric 0-400 m: 790/731/674/620/569 m/s."},{"maker":"Sellier & Bellot","partNumber":"V341642","line":"Target Match","bullet":"HPBT","weightGr":168,"mv":2785,"testBarrelIn":23.6,"bcG1":0.458,"bcG7":0.231,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/rifle-ammunition-target-match/detail/188","discontinued":false,"note":"Metric 0-400 m: 849/783/719/658/601 m/s."},{"maker":"Sellier & Bellot","partNumber":"V342032","line":"Screen Ammo","bullet":"Lead-free frangible/training","weightGr":124,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.sellier-bellot.cz/en/products/rifle-ammunition/screen-ammo/","discontinued":false,"note":"For shooting cinemas and training; no ballistic data.","noData":true},{"maker":"PPU","partNumber":"A-479","line":"Standard Rifle","bullet":"FMJ","weightGr":123,"mv":3150,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"Source: PPU 2023 commercial catalog PDF; 610 mm barrel. Metric vel at 0/100/200/300 (distance unit not printed, presumably m): 960/849/746/651 m/s. No BC listed."},{"maker":"PPU","partNumber":"A-062","line":"Standard Rifle","bullet":"SP","weightGr":150,"mv":2904,"testBarrelIn":24,"bcG1":0.342,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog; BC type not labelled. Metric 0/100/200/300: 885/792/705/624 m/s."},{"maker":"PPU","partNumber":"A-094","line":"Standard Rifle","bullet":"FMJ","weightGr":150,"mv":2904,"testBarrelIn":24,"bcG1":0.413,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog; BC type not labelled. Metric 0/100/200/300: 885/809/735/666 m/s."},{"maker":"PPU","partNumber":"A-612","line":"Standard Rifle (M1 Garand)","bullet":"FMJ","weightGr":150,"mv":2749,"testBarrelIn":24,"bcG1":0.413,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"Marked with the catalog's '\u2022 For M1 Garand rifle' symbol. Metric 0/100/200/300: 838/761/690/624 m/s."},{"maker":"PPU","partNumber":"A-364","line":"Standard Rifle","bullet":"PSP BT","weightGr":165,"mv":2805,"testBarrelIn":24,"bcG1":0.439,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog. Metric 0/100/200/300: 855/784/716/652 m/s."},{"maker":"PPU","partNumber":"A-365","line":"Standard Rifle","bullet":"HP BT","weightGr":168,"mv":2805,"testBarrelIn":24,"bcG1":0.46,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog. Metric 0/100/200/300: 855/788/724/663 m/s."},{"maker":"PPU","partNumber":"A-449","line":"Standard Rifle","bullet":"FMJ BT","weightGr":175,"mv":2723,"testBarrelIn":24,"bcG1":0.502,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog. Metric 0/100/200/300: 830/769/710/654 m/s."},{"maker":"PPU","partNumber":"A-066","line":"Standard Rifle","bullet":"SP","weightGr":180,"mv":2690,"testBarrelIn":24,"bcG1":0.413,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog. Metric 0/100/200/300: 820/746/677/611 m/s."},{"maker":"PPU","partNumber":"A-418","line":"Standard Rifle","bullet":"HP BT","weightGr":190,"mv":2625,"testBarrelIn":24,"bcG1":0.589,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog. Metric 0/100/200/300: 800/743/688/636 m/s. The maker's BC and its own velocity table don't fully agree (table fits G1 0.519); chronograph and true this load."},{"maker":"PPU","partNumber":"A-323","line":"GROM","bullet":"GROM","weightGr":170,"mv":2657,"testBarrelIn":24,"bcG1":0.374,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog. Metric 0/100/200/300: 810/732/659/590 m/s."},{"maker":"PPU","partNumber":"A-628","line":"Z-GROM","bullet":"Z-GROM","weightGr":170,"mv":2657,"testBarrelIn":24,"bcG1":0.374,"bcG7":null,"vel":null,"url":"https://www.prvipartizan.com/download/PPU_2023.pdf","discontinued":false,"note":"2023 catalog. Metric 0/100/200/300: 810/732/659/590 m/s."},{"maker":"Fiocchi","partNumber":"3006AFOA","line":"Range Dynamics","bullet":"FMJ Boat-Tail","weightGr":150,"mv":3000,"testBarrelIn":null,"bcG1":0.398,"bcG7":null,"vel":{"100":2762,"200":2537,"300":2322,"400":2118,"500":1924},"url":"https://www.fiocchiusa.com/centerfire-rifle/range-dynamics-rifle/33-3006AFOA.html","discontinued":false,"note":"BC not labelled G1/G7."},{"maker":"Fiocchi","partNumber":"3006BFOA","line":"Field Dynamics Big Game","bullet":"Pointed Soft Point","weightGr":150,"mv":2910,"testBarrelIn":null,"bcG1":0.38,"bcG7":null,"vel":{"100":2666,"200":2435,"300":2216,"400":2008,"500":1812},"url":"https://www.fiocchiusa.com/centerfire-rifle/field-dynamics/field-dynamics-big-game/33-3006BFOA.html","discontinued":false,"note":"BC not labelled G1/G7."},{"maker":"Fiocchi","partNumber":"3006C","line":"Field Dynamics Big Game","bullet":"Pointed Soft Point","weightGr":165,"mv":2800,"testBarrelIn":null,"bcG1":0.404,"bcG7":null,"vel":{"100":2576,"200":2362,"300":2159,"400":1966,"500":1784},"url":"https://www.fiocchiusa.com/centerfire-rifle/field-dynamics/field-dynamics-big-game/33-3006C.html","discontinued":true,"note":"Page says Discontinued (50% off while supplies last). BC not labelled G1/G7."},{"maker":"Fiocchi","partNumber":"3006D","line":"Field Dynamics Big Game","bullet":"Pointed Soft Point","weightGr":180,"mv":2700,"testBarrelIn":null,"bcG1":0.452,"bcG7":null,"vel":{"100":2503,"200":2315,"300":2135,"400":1963,"500":1800},"url":"https://www.fiocchiusa.com/centerfire-rifle/field-dynamics/field-dynamics-big-game/33-3006D.html","discontinued":false,"note":"BC not labelled G1/G7."},{"maker":"Fiocchi","partNumber":"3006SCA","line":"Hyperformance Hunt","bullet":"Swift Scirocco Boat-Tail Spitzer","weightGr":165,"mv":2875,"testBarrelIn":null,"bcG1":0.47,"bcG7":null,"vel":{"100":2678,"200":2490,"300":2310,"400":2137,"500":1971},"url":"https://www.fiocchiusa.com/centerfire-rifle/hyperformance-hunt-rifle/33-3006SCA.html","discontinued":false,"note":"BC not labelled G1/G7."},{"maker":"Fiocchi","partNumber":"3006HSC","line":"Hyperformance Hunt","bullet":"Hornady SST Polymer Boat-Tail","weightGr":180,"mv":2675,"testBarrelIn":null,"bcG1":0.48,"bcG7":null,"vel":{"100":2491,"200":2314,"300":2144,"400":1982,"500":1826},"url":"https://www.fiocchiusa.com/centerfire-rifle/hyperformance-hunt-rifle/33-3006HSC.html","discontinued":true,"note":"Page says Discontinued (50% off while supplies last). BC not labelled G1/G7."},{"maker":"Fiocchi","partNumber":"3006BHC","line":"Backwoods Hunter","bullet":"Copper HP","weightGr":150,"mv":2950,"testBarrelIn":null,"bcG1":0.4,"bcG7":null,"vel":{"100":2716,"200":2494,"300":2282,"400":2081,"500":1890},"url":"https://www.fiocchiusa.com/centerfire-rifle/backwoods-hunter/33-3006BHC.html","discontinued":true,"note":"Page says Discontinued. BC not labelled G1/G7."},{"maker":"Black Hills Gold","partNumber":null,"line":"Black Hills Gold","bullet":"Hornady CX","weightGr":150,"mv":2900,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.black-hills.com/shop/bh-gold-ammo/30-06-springfield/","discontinued":false,"note":"Caliber page gives no part numbers or BCs; 2801 ft-lb. A retailer lists MPN 1C3006BHGN10 for this load (not confirmed on maker page).","noData":true},{"maker":"Black Hills Gold","partNumber":null,"line":"Black Hills Gold","bullet":"Hornady ELD Match","weightGr":155,"mv":2900,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.black-hills.com/shop/bh-gold-ammo/30-06-springfield/","discontinued":false,"note":"2894 ft-lb.","noData":true},{"maker":"Black Hills Gold","partNumber":null,"line":"Black Hills Gold","bullet":"Hornady CX","weightGr":165,"mv":2750,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.black-hills.com/shop/bh-gold-ammo/30-06-springfield/","discontinued":false,"note":"2770 ft-lb.","noData":true},{"maker":"Black Hills Gold","partNumber":null,"line":"Black Hills Gold","bullet":"Hornady Match Hollow Point","weightGr":168,"mv":2700,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.black-hills.com/shop/bh-gold-ammo/30-06-springfield/","discontinued":false,"note":"2720 ft-lb.","noData":true},{"maker":"Black Hills Gold","partNumber":null,"line":"Black Hills Gold","bullet":"Hornady ELD Match","weightGr":168,"mv":2750,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.black-hills.com/shop/bh-gold-ammo/30-06-springfield/","discontinued":false,"note":"2821 ft-lb.","noData":true},{"maker":"Black Hills Gold","partNumber":null,"line":"Black Hills Gold","bullet":"Hornady ELD-X","weightGr":178,"mv":2700,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.black-hills.com/shop/bh-gold-ammo/30-06-springfield/","discontinued":false,"note":"2881 ft-lb.","noData":true},{"maker":"Black Hills Gold","partNumber":null,"line":"Black Hills Gold","bullet":"Barnes TSX","weightGr":180,"mv":2600,"testBarrelIn":24,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.black-hills.com/shop/bh-gold-ammo/30-06-springfield/","discontinued":false,"note":"2702 ft-lb.","noData":true},{"maker":"HSM","partNumber":"HSM-30-06-2-N","line":"HSM","bullet":"FMJ-BT","weightGr":150,"mv":2900,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-150gr-fmj-bt-20-rounds/","discontinued":false,"note":"Page lists 'Velocity 2900 FPS', 2802 ft-lb.","noData":true},{"maker":"HSM","partNumber":"30-06-42-N","line":"Low Recoil","bullet":"Low Recoil (polymer tip per retailers)","weightGr":150,"mv":2348,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-150gr-low-recoil-20-rounds/","discontinued":false,"note":"Page lists 'Velocity 2348 FPS'.","noData":true},{"maker":"HSM","partNumber":"HSM-30-06-40-N","line":"Game King","bullet":"Sierra GameKing SBT","weightGr":165,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-165gr-gameking-20-rounds/","discontinued":false,"note":"No velocity on page; description mentions 180gr (inconsistent).","noData":true},{"maker":"HSM","partNumber":"HSM-30-06-46-N","line":"Tipping Point 2","bullet":"Hornady SST","weightGr":165,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-165gr-tipping-point-2-20-rounds/","discontinued":false,"note":"No velocity on page.","noData":true},{"maker":"HSM","partNumber":"HSM-30-06-45-N","line":"Tipping Point","bullet":"Hunting (Sierra GameChanger per retailers)","weightGr":165,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-165gr-tipping-point-20-rounds/","discontinued":false,"note":"No velocity on page.","noData":true},{"maker":"HSM","partNumber":"BER-3006168VLD","line":"Trophy Gold","bullet":"Berger Hunting VLD","weightGr":168,"mv":2808,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-168gr-berger-vld-20-rounds/","discontinued":false,"note":"2942 ft-lb.","noData":true},{"maker":"HSM","partNumber":"HSM-30-06-41-N","line":"Game King","bullet":"Sierra GameKing SBT","weightGr":180,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-180gr-gameking-20-rounds/","discontinued":false,"note":"No velocity on page.","noData":true},{"maker":"HSM","partNumber":"BER-3006185VLD","line":"Trophy Gold","bullet":"Berger Hunting VLD","weightGr":185,"mv":2721,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-185gr-berger-vld-20-rounds/","discontinued":false,"note":"Sold out (not marked discontinued). 3042 ft-lb.","noData":true},{"maker":"HSM","partNumber":"BER-3006210VLD","line":"Trophy Gold Extended Range","bullet":"Berger Hunting VLD","weightGr":210,"mv":2534,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://hsmammunition.com/product/30-06-springfield-210gr-berger-vld-20-rounds/","discontinued":false,"note":"2995 ft-lb.","noData":true},{"maker":"Swift","partNumber":null,"line":"A-Frame","bullet":"A-Frame Semi-Spitzer","weightGr":180,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.swiftbullets.com/products/a-frame-semi-spitzer-cal-30-06-sprg","discontinued":false,"note":"Maker page gives no ballistics. Retailer OpticsPlanet lists 2724 fps / 2967 ft-lb and '10041' in the title.","noData":true},{"maker":"Swift","partNumber":null,"line":"Scirocco","bullet":"Scirocco Boat-Tail Spitzer","weightGr":180,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://www.swiftbullets.com/products/scirocco-boat-tail-spitzer-cal-30-06-sprg","discontinued":false,"note":"Maker page gives no ballistics.","noData":true},{"maker":"Lapua","partNumber":"4317567","line":"Mega","bullet":"Mega Soft Point (E401)","weightGr":200,"mv":2545,"testBarrelIn":24,"bcG1":0.344,"bcG7":null,"vel":{"100":2297,"200":2063,"300":1843,"400":null,"500":null},"url":"https://lapua.com/product/30-06-springfield-hunting-cartridge-mega-soft-point-13g-200gr-4317567","discontinued":false,"note":"Metric: 775/693/615/543 m/s at 0-300 m."},{"maker":"Lapua","partNumber":"4317563","line":"Mega","bullet":"Mega Soft Point (E415)","weightGr":185,"mv":2625,"testBarrelIn":24,"bcG1":0.319,"bcG7":null,"vel":{"100":2353,"200":2098,"300":1859,"400":null,"500":null},"url":"https://lapua.com/product/30-06-springfield-mega-hunting-cartridge-soft-point-12g-185gr-4317563","discontinued":false,"note":"Table partly garbled on page. Metric: 800/710/625/547 m/s."},{"maker":"Lapua","partNumber":"N317106","line":"Naturalis","bullet":"Naturalis lead-free (N558)","weightGr":170,"mv":2723,"testBarrelIn":24,"bcG1":0.354,"bcG7":0.177,"vel":{"100":2470,"200":2228,"300":1999,"400":null,"500":null},"url":"https://lapua.com/product/30-06-springfield-leadfree-hunting-cartridge-naturalis-11g-170gr-n317106","discontinued":false,"note":"Metric: 830/746/666/591 m/s."},{"maker":"Lapua","partNumber":"N317107","line":"TRX","bullet":"TRX TrueRange Expanding lead-free (N584)","weightGr":165,"mv":2713,"testBarrelIn":23,"bcG1":0.49,"bcG7":0.243,"vel":{"100":2507,"200":2308,"300":2116,"400":null,"500":null},"url":"https://www.lapua.com/product/30-06-spring-10-7-g-165-grains-n317107trx/","discontinued":false,"note":"570 mm barrel. Imperial table also gives 1593 fps at 600 yd. Metric: 827/758/692/629 m/s. The maker's BC and its own velocity table don't fully agree (table fits G1 0.436); chronograph and true this load."},{"maker":"Lapua","partNumber":"4317577","line":"FMJ","bullet":"FMJ (S374)","weightGr":123,"mv":2936,"testBarrelIn":24,"bcG1":0.27,"bcG7":null,"vel":{"100":2594,"200":2268,"300":1955,"400":null,"500":null},"url":"https://www.lapua.com/product/30-06-springfield-8-0-g-123-gr-fmj-cartridge/","discontinued":false,"note":"Imperial table shows muzzle 2935 fps. Metric: 895/782/674/571 m/s."},{"maker":"RWS","partNumber":"2426274","line":"DRIVEN HUNT","bullet":"DRIVEN HUNT","weightGr":165,"mv":2657,"testBarrelIn":23.6,"bcG1":0.185,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-driven-hunt-10-7g","discontinued":false,"note":"Page gives 10.7 g and 810 m/s; BC type not labelled. Metric 0/50/100/150/200/250/300 m: 810/731/657/584/515/457/407 m/s. Published BC is inconsistent with its own velocity table, so this load is not offered.","noData":true},{"maker":"RWS","partNumber":"2428313","line":"DRIVEN HUNT Short Rifle","bullet":"DRIVEN HUNT","weightGr":150,"mv":2694,"testBarrelIn":19.7,"bcG1":0.169,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-driven-hunt-short-rifle-9-7g","discontinued":false,"note":"9.7 g, 821 m/s, 500 mm barrel; BC type not labelled. Metric 0-300 m (50 m steps): 821/734/653/573/499/439/388 m/s. Published BC is inconsistent with its own velocity table, so this load is not offered.","noData":true},{"maker":"RWS","partNumber":"2408642","line":"EVOLUTION GREEN","bullet":"EVOLUTION GREEN lead-free","weightGr":139,"mv":2871,"testBarrelIn":23.6,"bcG1":0.318,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-evo-green-9-0g","discontinued":false,"note":"9.0 g (meta says 8.8 g), 875 m/s; BC type not labelled. Metric 0-300 m (50 m steps): 875/826/780/736/693/651/610 m/s."},{"maker":"RWS","partNumber":"2411785","line":"EVOLUTION GREEN Short Rifle","bullet":"EVOLUTION GREEN lead-free","weightGr":139,"mv":2890,"testBarrelIn":19.7,"bcG1":0.338,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-evo-green-short-rifle-9-0g","discontinued":false,"note":"9.0 g, 881 m/s, 500 mm. Metric 0-300 m (50 m steps): 881/835/791/748/706/666/627 m/s."},{"maker":"RWS","partNumber":"2318843","line":"HIT","bullet":"HIT lead-free solid copper","weightGr":165,"mv":2756,"testBarrelIn":23.6,"bcG1":0.42,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-hit-10-7g","discontinued":false,"note":"10.7 g, 840 m/s. Metric 0-300 m (50 m steps): 840/804/769/734/701/668/636 m/s."},{"maker":"RWS","partNumber":"2408472","line":"HIT Short Rifle","bullet":"HIT lead-free solid copper","weightGr":165,"mv":2756,"testBarrelIn":19.7,"bcG1":0.42,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-hit-short-rifle-10-7g","discontinued":false,"note":"10.7 g, 840 m/s, 500 mm. Metric table identical to 2318843."},{"maker":"RWS","partNumber":"2401206","line":"SPEED TIP PRO","bullet":"SPEED TIP PROFESSIONAL","weightGr":165,"mv":2854,"testBarrelIn":23.6,"bcG1":0.422,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-speed-tip-pro-10-7g","discontinued":false,"note":"10.7 g, 870 m/s. Metric 0-300 m (50 m steps): 870/833/798/763/730/697/665 m/s."},{"maker":"RWS","partNumber":"2408473","line":"SPEED TIP PRO Short Rifle","bullet":"SPEED TIP PROFESSIONAL","weightGr":165,"mv":2854,"testBarrelIn":19.7,"bcG1":0.405,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-speed-tip-pro-short-rifle-10-7g","discontinued":false,"note":"10.7 g, 870 m/s, 500 mm. Metric 0-300 m (50 m steps): 870/832/795/758/723/689/655 m/s."},{"maker":"RWS","partNumber":"2315435","line":"EVOLUTION","bullet":"EVOLUTION bonded","weightGr":184,"mv":2657,"testBarrelIn":23.6,"bcG1":0.366,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-evo-11-9g","discontinued":false,"note":"11.9 g, 810 m/s. Metric 0-300 m (50 m steps): 810/770/730/692/655/620/585 m/s."},{"maker":"RWS","partNumber":"2119218","line":"UNI Classic","bullet":"UNI CLASSIC","weightGr":180,"mv":2690,"testBarrelIn":23.6,"bcG1":0.35,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-uni-classic-11-7g","discontinued":false,"note":"11.7 g, 820 m/s. Metric 0-300 m (50 m steps): 820/778/736/696/658/620/584 m/s."},{"maker":"RWS","partNumber":"2314703","line":"UNI Classic","bullet":"UNI CLASSIC","weightGr":200,"mv":2526,"testBarrelIn":23.6,"bcG1":0.38,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-uni-classic-13-0g","discontinued":false,"note":"13.0 g, 770 m/s. Metric 0-300 m (50 m steps): 770/732/695/660/625/592/560 m/s."},{"maker":"RWS","partNumber":"2117797","line":"ID Classic","bullet":"ID CLASSIC","weightGr":150,"mv":3002,"testBarrelIn":23.6,"bcG1":0.303,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-id-classic-9-7g","discontinued":false,"note":"9.7 g, 915 m/s. Metric 0-300 m (50 m steps): 915/862/812/763/716/671/627 m/s."},{"maker":"RWS","partNumber":"2117800","line":"KS","bullet":"KEGELSPITZ KS","weightGr":165,"mv":2821,"testBarrelIn":23.6,"bcG1":0.329,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-ks-10-7g","discontinued":false,"note":"10.7 g, 860 m/s. Metric 0-300 m (50 m steps): 860/813/769/725/683/642/603 m/s."},{"maker":"RWS","partNumber":"2117770","line":"KS","bullet":"KEGELSPITZ KS","weightGr":150,"mv":2953,"testBarrelIn":23.6,"bcG1":0.298,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-ks-9-7g","discontinued":false,"note":"9.7 g, 900 m/s. Metric 0-300 m (50 m steps): 900/847/796/747/700/655/611 m/s."},{"maker":"RWS","partNumber":"2117851","line":"DK","bullet":"DOPPELKERN DK","weightGr":165,"mv":2805,"testBarrelIn":23.6,"bcG1":0.293,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-dk-10-7g","discontinued":false,"note":"10.7 g, 855 m/s. Metric 0-300 m (50 m steps): 855/803/753/705/658/614/571 m/s."},{"maker":"RWS","partNumber":"2406948","line":"CINESHOT","bullet":"CINESHOT","weightGr":147,"mv":null,"testBarrelIn":null,"bcG1":null,"bcG7":null,"vel":null,"url":"https://rws-ammunition.com/en/products/centerfire-rifle-cartridges/rws-30-06-cineshot-9-5g","discontinued":false,"note":"9.5 g / 147 gr stated; for shooting cinemas; no ballistics.","noData":true}] /*LIB*/;
+const libId = x => `${x.maker || "Hornady"}:${x.partNumber}`;
+function libToLoad(x) {
+  const maker = x.maker || "Hornady";
+  let model = "G1", bc = x.bcG1, src = "";
+  if (x.bcG7) { model = "G7"; bc = x.bcG7; src = `${maker}'s published G7 BC.`; }
+  else if (x.bcG1) { src = `${maker}'s published G1 BC.`; }
+  else {
+    const vt = [100, 200, 300, 400, 500].filter(r => x.vel && x.vel[r]).map(r => ({ yd: r, fps: x.vel[r] }));
+    const f = vt.length >= 2 ? fitBC(x.mv, x.weightGr, vt, [], 200) : null;
+    if (f) { bc = f.bc; src = `BC back-calculated from ${maker}'s velocity table (no published BC).`; }
+  }
+  const tb = x.testBarrelIn ? `${x.testBarrelIn}" ` : "";
+  return { name: `${maker} ${x.line} ${x.weightGr} gr ${x.bullet}${x.partNumber ? ` (#${x.partNumber})` : ""}`, model, bc, mv: x.mv, weight: x.weightGr,
+    length: x.componentBulletLengthIn || 0, minExp: x.minExp || 1800, libId: libId(x),
+    note: `${src} ${x.mv} fps from ${maker}'s ${tb}test barrel; your 22" BLR likely runs a little slower. Expansion floor ${(x.minExp || 1800).toLocaleString()} fps${x.minExp ? " per the maker" : " is a conservative default"}. ${x.extra ? x.extra + " " : ""}${x.note ? x.note + " " : ""}Source: ${x.url}` };
+}
+const usable = x => !x.noData && x.mv && (x.bcG1 || x.bcG7 || (x.vel && [100, 200, 300, 400, 500].filter(r => x.vel[r]).length >= 2));
+const keyForLib = x => Object.keys(S.loads).find(k => S.loads[k].libId === libId(x));
+function addLib(x, fav) {
+  let k = keyForLib(x);
+  if (!k) { const L = libToLoad(x); if (!(L.bc > 0)) return null; k = "lib" + Date.now().toString(36) + Math.floor(Math.random() * 1e4); L.fav = !!fav; S.loads[k] = L; }
+  else if (fav !== undefined) S.loads[k].fav = !!fav;
+  return k;
+}
+const STAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.2l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="currentColor"/></svg>';
+const STAR_O = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17.2l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>';
+const norm = s => String(s || "").toLowerCase().replace(/[^a-z0-9.]+/g, " ");
+function searchItems(q) {
+  const words = norm(q).split(" ").filter(Boolean);
+  const mine = Object.entries(S.loads).map(([k, L]) => ({ kind: "mine", k, L, text: norm(L.name) }));
+  const lib = LIB.filter(x => !keyForLib(x)).map(x => ({ kind: "lib", x, text: norm(`${x.maker || "Hornady"} ${x.line} ${x.bullet} ${x.weightGr} gr ${x.weightGr}gr ${x.partNumber}`) }));
+  const all = [...mine, ...lib];
+  if (!words.length) return [];
+  return all.filter(it => words.every(w => it.text.includes(w)));
+}
+function renderLib() {
+  const makers = [...new Set(LIB.map(x => x.maker || "Hornady"))];
+  const q = $("libQ").value.trim(), box = $("libList"); box.replaceChildren();
+  const hits = searchItems(q);
+  $("libSrc").textContent = !q ? `Search ${LIB.length} factory .30-06 loads from ${makers.length} makers (${makers.join(", ")}), plus your own. Tap the star to add a load to your favorites.`
+    : hits.length ? `${hits.length} match${hits.length === 1 ? "" : "es"}${hits.length > 40 ? ", showing the first 40" : ""}.` : "No matches. Try fewer words, like a maker and a weight.";
+  hits.slice(0, 40).forEach(it => {
+    const row = document.createElement("div"); row.className = "librow";
+    const star = document.createElement("button"); star.type = "button"; star.className = "star";
+    const t = document.createElement("div"), b = document.createElement("b"), s = document.createElement("span");
+    const use = document.createElement("button"); use.type = "button"; use.className = "btn";
+    if (it.kind === "mine") {
+      const on = it.L.fav !== false; star.innerHTML = on ? STAR : STAR_O; star.setAttribute("aria-pressed", on); star.setAttribute("aria-label", on ? "Remove from favorites" : "Add to favorites");
+      star.onclick = () => { it.L.fav = !on; save(); render(); };
+      b.textContent = it.L.name; s.textContent = `Your load · ${Number(it.L.mv).toLocaleString()} fps · ${it.L.model} ${it.L.bc}`;
+      use.textContent = it.k === S.load ? "In use" : "Use"; use.disabled = it.k === S.load; use.onclick = () => { S.load = it.k; save(); render(); };
+    } else {
+      const x = it.x, ok = usable(x);
+      star.innerHTML = STAR_O; star.setAttribute("aria-pressed", "false"); star.setAttribute("aria-label", "Add to favorites"); star.disabled = !ok;
+      star.onclick = () => { const k = addLib(x, true); if (k) { save(); render(); $("delNote").textContent = `Added "${S.loads[k].name}" to favorites.`; } };
+      b.textContent = `${x.maker || "Hornady"} ${x.line} ${x.weightGr} gr ${x.bullet}`;
+      const bcTxt = x.bcG7 ? `G7 ${x.bcG7}` : x.bcG1 ? `G1 ${x.bcG1}` : ok ? "BC from table" : "no BC published";
+      s.textContent = ok ? `${x.partNumber ? "#" + x.partNumber + " · " : ""}${x.mv.toLocaleString()} fps · ${bcTxt}${x.discontinued ? " · discontinued" : ""}`
+        : `${x.partNumber ? "#" + x.partNumber + " · " : ""}Maker doesn't publish enough data to use. Photograph the box if it lists velocity and BC.`;
+      use.textContent = "Use"; use.disabled = !ok;
+      use.onclick = () => { const k = addLib(x); if (k) { S.load = k; save(); render(); $("delNote").textContent = `Using "${S.loads[k].name}". Tap ☆ to keep it in favorites.`; } };
+    }
+    t.append(b, s); row.append(star, t, use); box.append(row);
+  });
+}
+$("libQ").addEventListener("input", renderLib);
+$("favBtn").onclick = () => { load().fav = load().fav === false; save(); render(); $("favNote").textContent = load().fav ? "Shown in your favorites." : "Hidden from favorites; find it again with search."; };
+
+newQ();
+render();
+})();
+</script>
