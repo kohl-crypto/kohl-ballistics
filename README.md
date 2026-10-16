@@ -27,6 +27,15 @@ Built for one hand in the field:
 - An optional setting keeps the screen on while shooting.
 - Setup sections fold away to one-line summaries.
 
+Hunt and Range: one button at the top of the Shoot screen switches between them.
+- Both: the answer sits next to your reticle, zoomed on the hold. Tap the reticle for a full-screen scope view
+  with big range and wind buttons.
+- Hunt: tap the animal. The energy, speed and limit tiles show whether this is a clean kill at this range, and
+  "No shot" shows over the answer when it isn't.
+- Range: the full numbers, your target size drawn to scale on the reticle, a list of your steel distances, and
+  group logging. Tap each hit on your reticle. Once you have enough long groups, the app offers to true your
+  velocity from them.
+
 ## What's here
 - `index.html`, `sw.js`, `manifest.json`, `icons/`, `fonts/`: Lance's edition (GitHub Pages serves these).
 - `friends/`: the friends' edition (shares `icons/` and `fonts/`).

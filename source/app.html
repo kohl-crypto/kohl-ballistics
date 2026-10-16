@@ -183,6 +183,63 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
 .installbar{display:flex;align-items:center;gap:10px;font-size:.88rem;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 6px 6px 12px}
 .installbar p{margin:0;flex:1;min-width:0}
 .installbar .btn{min-height:40px;padding:6px 12px}
+/* Hunt / Range: one tap switches what the Shoot screen shows */
+.useseg{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;background:var(--sunk);border:1px solid var(--line);border-radius:12px}
+.useseg button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border:0;border-radius:9px;background:none;color:var(--muted);font:700 1.15rem/1 var(--display);text-transform:uppercase;letter-spacing:.06em;cursor:pointer}
+.useseg button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.useseg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+body[data-use="hunt"] .range-only,body[data-use="range"] .hunt-only{display:none!important}
+/* answer and reticle side by side */
+.solgrid{display:grid;grid-template-columns:minmax(0,1fr) min(42vw,200px);gap:12px;align-items:start}
+.solgrid .call{font-size:clamp(1.45rem,7vw,2.1rem)}
+.solgrid .call.wind{font-size:clamp(1.15rem,5.2vw,1.6rem)}
+.retbtn{display:block;width:100%;padding:0;border:0;background:none;cursor:zoom-in;border-radius:50%}
+.retbtn .reticle{display:block;max-width:none;clip-path:circle(50%)}
+#retBox .chip{min-height:36px;padding:4px 12px;font-size:.78rem}
+#retCap{text-align:center;font-size:.75rem;line-height:1.25}
+.noshot{border:2px solid var(--bad);border-radius:10px;padding:10px 12px;background:color-mix(in srgb,var(--bad) 14%,var(--surface));display:flex;flex-direction:column;gap:6px}
+.noshot h3{margin:0;font:700 1.35rem/1.05 var(--display);text-transform:uppercase;color:var(--bad);letter-spacing:.02em}
+.tiles3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.tile{background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile span{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.tile b{font:600 1.12rem/1.15 var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.tile small{font-size:.74rem;color:var(--muted);line-height:1.2}
+.tile.good b{color:var(--good)} .tile.warn b{color:var(--warn)} .tile.bad{border:2px solid var(--bad)} .tile.bad b{color:var(--bad)}
+.chips4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.chips4 .chip{border-radius:10px;min-height:46px;padding:6px 2px;font:600 clamp(.82rem,3.7vw,1rem)/1.1 var(--display);letter-spacing:0;white-space:nowrap}
+.chips4 .chip[aria-pressed="true"].no{border:2px solid var(--bad);background:color-mix(in srgb,var(--bad) 16%,var(--surface))}
+/* range mode */
+.tgts{display:flex;flex-direction:column;gap:6px}
+.tgt{display:grid;grid-template-columns:minmax(0,1fr) 46px;gap:6px}
+.tgt .go{display:grid;grid-template-columns:4.4em minmax(0,1fr) auto;align-items:center;gap:8px;text-align:left;min-height:48px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:var(--sunk);color:var(--ink);font:600 .95rem var(--mono);cursor:pointer}
+.tgt .go[aria-pressed="true"]{border:2px solid var(--accent);background:var(--accent-soft)}
+.tgt .go small{font:400 .75rem var(--body);color:var(--muted)}
+.tgt .x,.grp .x{min-height:46px;padding:0;font-size:1.1rem}
+.addtgt{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) auto;gap:6px;align-items:end}
+.grp{display:grid;grid-template-columns:minmax(0,1fr) auto 46px;gap:8px;align-items:center;font-size:.9rem;padding:4px 0;border-bottom:1px solid var(--line)}
+.grp b{font-family:var(--mono);font-weight:600}
+.trueup{background:color-mix(in srgb,var(--warn) 14%,var(--surface));border:1px solid var(--warn);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.trueup:empty{display:none}
+.trueup p{margin:0}
+/* full-screen scope view and group logging */
+.overlay{position:fixed;inset:0;z-index:60;background:var(--bg);display:flex;flex-direction:column;gap:10px;padding:max(12px,env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) max(14px,env(safe-area-inset-bottom,0px)) max(14px,env(safe-area-inset-left,0px));overflow:auto}
+.overlay[hidden]{display:none}
+.ovtop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.ovx{width:52px;height:52px;flex:none;font-size:1.3rem;padding:0}
+.ovret{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center}
+.ovret .reticle{width:min(100%,calc(100dvh - 330px));max-width:560px;min-width:220px}
+.ovctl{display:grid;grid-template-columns:64px minmax(0,1fr) 64px;gap:8px;align-items:center}
+.ovctl .btn{min-height:60px;font-size:1.3rem}
+.ovctl b{text-align:center;font:700 1.9rem/1 var(--display)}
+.ovctl b small{font-size:.9rem;font-weight:600}
+.ov2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ov2 .btn{min-height:54px}
+body.ovopen{overflow:hidden}
+body.ovopen nav.tabs,body.ovopen .hud{display:none}
+#gvRet{touch-action:none;cursor:crosshair}
+#groupView .ovret{flex:0 0 auto;align-items:flex-start}
+#gvStats .tile{height:86px;overflow:hidden}
+#gvStats .tile small{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 </style>
 
 <div class="wrap">
@@ -192,6 +249,35 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
     <span class="sub" id="hdrSub"></span>
   </header>
   <div class="hud" id="hud" aria-hidden="true"><b id="hudCall"></b><span id="hudSub"></span></div>
+  <!-- Full-screen scope view: the whole reticle, the answer, and big range and wind buttons -->
+  <div class="overlay" id="scopeView" hidden role="dialog" aria-modal="true" aria-label="Scope view">
+    <div class="ovtop">
+      <div style="min-width:0;display:flex;flex-direction:column;gap:4px">
+        <div class="call" id="svElev"></div>
+        <div class="call wind" id="svWind" style="font-size:1.45rem"></div>
+        <div class="callsub" id="svSub"></div>
+      </div>
+      <button class="btn ovx" id="svClose" type="button" aria-label="Close the scope view">✕</button>
+    </div>
+    <div class="ovret"><svg class="reticle" id="reticleBig" viewBox="-170 -170 340 340" role="img" aria-label="Your whole reticle with the hold marked"></svg></div>
+    <div class="ovctl">
+      <button class="btn" id="svRDown" type="button" aria-label="Minus 5 yards">−5</button><b id="svRange"></b><button class="btn" id="svRUp" type="button" aria-label="Plus 5 yards">+5</button>
+    </div>
+    <div class="ovctl">
+      <button class="btn" id="svWDown" type="button" aria-label="1 mph less wind">−</button><b id="svWindV"></b><button class="btn" id="svWUp" type="button" aria-label="1 mph more wind">+</button>
+    </div>
+  </div>
+  <!-- Range: log a group by tapping hits on your own reticle -->
+  <div class="overlay" id="groupView" hidden role="dialog" aria-modal="true" aria-label="Log a group">
+    <div class="ovtop">
+      <div style="min-width:0"><h2 style="margin:0">Log a group</h2><div class="callsub" id="gvSub"></div></div>
+      <button class="btn ovx" id="gvClose" type="button" aria-label="Cancel, don't save this group">✕</button>
+    </div>
+    <p class="note" style="margin:0" id="gvHelp"></p>
+    <div class="ovret"><svg class="reticle" id="gvRet" viewBox="-40 -40 80 80" role="img" aria-label="Your reticle around the aim point. Tap where each shot hit."></svg></div>
+    <div class="tiles3" id="gvStats"></div>
+    <div class="ov2"><button class="btn" id="gvUndo" type="button">Undo last</button><button class="btn primary" id="gvSave" type="button">Save group</button></div>
+  </div>
   <section class="panel spot" id="spotter" hidden aria-label="Spotter">
     <div class="row" style="justify-content:space-between">
       <h2>Spotter</h2>
@@ -223,30 +309,62 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
       <p class="note" style="margin:0">Enter your rifle's caliber, your scope, and where you zeroed under Rifle &amp; load, then pick your ammo from the factory list. The numbers below are only right once that's done.</p>
       <div class="row" style="gap:8px"><button class="btn primary" id="setupGo" type="button">Set up rifle</button><button class="btn" id="setupDone" type="button">I've set it up</button></div>
     </div>
+    <div class="useseg" role="group" aria-label="Hunting or at the range" id="useSeg">
+      <button type="button" id="uHunt" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21c-4-3-7-6.5-7-10.5a7 7 0 0 1 14 0C19 14.5 16 18 12 21z"/><circle cx="12" cy="10.5" r="2.5"/></svg>Hunt</button>
+      <button type="button" id="uRange" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></svg>Range</button>
+    </div>
     <div class="panel solution" id="solPanel">
+      <div class="alerts" id="alerts"></div>
       <div class="row" style="justify-content:space-between">
         <h2 id="solTitle">Firing solution</h2>
         <div class="seg" role="group" aria-label="Dial or hold">
           <button id="mDial" aria-pressed="true">Dial</button><button id="mHold" aria-pressed="false">Hold</button>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:8px;min-width:0" id="callBox">
-        <div class="call" id="callElev"></div>
-        <div class="callsub" id="callElevSub"></div>
-        <div class="call" id="callWind" style="font-size:1.6rem"></div>
-        <div class="callsub" id="callWindSub"></div>
+      <div class="solgrid">
+        <div style="display:flex;flex-direction:column;gap:8px;min-width:0" id="callBox">
+          <div class="call" id="callElev"></div>
+          <div class="callsub" id="callElevSub"></div>
+          <div class="call wind" id="callWind"></div>
+          <div class="callsub" id="callWindSub"></div>
+        </div>
+        <!-- Hold picture: always right with the answer, in Dial and Hold mode. Zoomed on the hold; tap for the whole reticle. -->
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0" id="retBox">
+          <button type="button" class="retbtn" id="retOpen" aria-label="Open the full-screen scope view"><svg class="reticle" id="reticle" viewBox="-170 -170 340 340" role="img" aria-label="Hold picture on your reticle, zoomed on the hold"></svg></button>
+          <span class="note" id="retCap"></span>
+          <button class="chip" id="sunBtn" type="button" aria-pressed="false">High contrast</button>
+        </div>
       </div>
-      <div class="alerts" id="alerts"></div>
-      <!-- Hold picture: always right with the answer, in Dial and Hold mode -->
-      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0" id="retBox">
-        <svg class="reticle" id="reticle" viewBox="-170 -170 340 340" role="img" aria-label="Hold picture on a 1-MOA grid"></svg>
-        <button class="chip" id="sunBtn" type="button" aria-pressed="false">High contrast</button>
+      <div>
         <div class="row" id="magRow" hidden style="width:100%">
           <span class="lbl">Magnification <button class="q" data-h="sfp" aria-expanded="false">?</button></span>
           <input type="range" id="mag" min="3" max="15" step="1" aria-label="Magnification" style="flex:1;min-width:120px">
           <b id="magVal" style="font-family:var(--mono)"></b>
         </div>
         <div class="help" data-for="sfp" hidden></div>
+      </div>
+    </div>
+
+    <!-- Hunt: is this a shot for this animal? -->
+    <div class="panel hunt-only" id="huntPanel">
+      <div class="chips4" id="species" role="group" aria-label="Animal"></div>
+      <div class="tiles3" id="shotCheck"></div>
+    </div>
+
+    <!-- Range: the numbers, your targets -->
+    <div class="panel range-only" id="rNumPanel">
+      <div id="rStatsBox"></div>
+      <span class="lbl">Target size</span>
+      <div class="chips" id="plates" role="group" aria-label="Target size"></div>
+      <span class="note" id="plateNote"></span>
+    </div>
+    <div class="panel range-only" id="rTgtPanel">
+      <div class="row" style="justify-content:space-between"><h2>My targets</h2><span class="note">tap one to load it</span></div>
+      <div class="tgts" id="tgts"></div>
+      <div class="addtgt">
+        <label class="field"><span class="lbl">Distance yd</span><input type="number" id="tgtR" min="25" max="1000" step="5" inputmode="numeric" placeholder="e.g. 450"></label>
+        <label class="field"><span class="lbl">Size</span><select id="tgtS"></select></label>
+        <button class="btn" id="tgtAdd" type="button">Add</button>
       </div>
     </div>
 
@@ -274,16 +392,22 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
             <button class="btn" id="wDown" type="button" aria-label="1 mph less wind">−</button>
             <button class="btn" id="wUp" type="button" aria-label="1 mph more wind">+</button>
           </div>
-          <input type="range" id="wind" min="0" max="30" step="1" aria-label="Wind speed">
+          <input type="range" id="wind" min="0" max="40" step="1" aria-label="Wind speed">
           <button class="btn" id="noWind" type="button" aria-pressed="false">No wind</button>
         </div>
       </div>
       <div class="note" id="windDesc"></div>
     </div>
 
+    <div class="panel range-only" id="rGrpPanel">
+      <div class="row" style="justify-content:space-between"><h2>Your groups</h2><span class="note" id="grpWhen"></span></div>
+      <button class="btn primary" id="grpLog" type="button">Log a group</button>
+      <div id="grps"></div>
+      <div class="trueup" id="trueUp"></div>
+    </div>
+
     <div class="panel" id="morePanel">
       <div class="zline" id="zeroLine"></div>
-      <div class="row" style="gap:8px"><span class="lbl">Animal</span><div class="chips" id="species" role="group" aria-label="Animal"></div></div>
       <div class="stats" id="stats"></div>
       <div class="flags" id="flags"></div>
     </div>
@@ -296,7 +420,7 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
         <b id="angleVal" class="bigval" style="font-size:2rem"></b>
         <button id="aUp" type="button" aria-label="1 degree more uphill">+</button>
       </div>
-      <input type="range" id="angle" min="-35" max="35" step="1" aria-label="Shot angle">
+      <input type="range" id="angle" min="-45" max="45" step="1" aria-label="Shot angle">
     </div>
 
     <div class="panel">
@@ -397,6 +521,8 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
         <label class="field"><span class="lbl">Min. expansion fps <button class="q" data-h="exp" aria-expanded="false" type="button">?</button></span><input type="number" id="minExp" step="25"></label>
       </div>
       <div class="help" data-for="mv" hidden></div><div class="help" data-for="bc" hidden></div><div class="help" data-for="exp" hidden></div>
+      <label class="row" style="gap:8px;min-height:44px"><input type="checkbox" id="mvMeas" style="width:22px;height:22px"> <span>This velocity is measured from my rifle (chronograph)</span></label>
+      <div class="note" id="mvNote"></div>
       <div class="note" id="loadNote"></div>
       <div class="addbox" id="poiBox" hidden>
         <span class="lbl">Where this load hits at your zero <button class="q" data-h="poi" aria-expanded="false" type="button">?</button></span>
@@ -752,9 +878,9 @@ const DEFAULTS_LANCE = {
   version: 3,
   load: "aw180",
   loads: {
-    aw180: { name: "Hornady American Whitetail 180 gr SP (#81084)", model: "G1", bc: 0.433, mv: 2700, weight: 180, length: 0, minExp: 1800,
-      note: "Your hunting load. 2,700 fps is Hornady's 24\" test-barrel velocity; your 22\" BLR is likely a bit slower. Hornady doesn't publish a BC for this load, so 0.433 is back-calculated from Hornady's own velocity table (it reproduces the box drops within 0.1\"). 1,800 fps is a conservative expansion floor for cup-and-core soft points. Confirm your zero with these: you sighted in with the 150s." },
-    aw150: { name: "Hornady American Whitetail 150 gr SP (#8108)", model: "G1", bc: 0.345, mv: 2910, weight: 150, length: 0, minExp: 1800,
+    aw180: { name: "Hornady American Whitetail 180 gr SP (#81084)", model: "G1", bc: 0.425, mv: 2700, weight: 180, length: 0, minExp: 1800, testBarrelIn: 24,
+      note: "Your hunting load. 2,700 fps is Hornady's 24\" test-barrel velocity; your 22\" BLR is likely a bit slower. Hornady doesn't publish a BC for this load, so 0.425 is back-calculated from Hornady's own velocity table (it reproduces the box drops within 0.1\"). 1,800 fps is a conservative expansion floor for cup-and-core soft points. Confirm your zero with these: you sighted in with the 150s." },
+    aw150: { name: "Hornady American Whitetail 150 gr SP (#8108)", model: "G1", bc: 0.338, mv: 2910, weight: 150, length: 0, minExp: 1800, testBarrelIn: 24,
       note: "The load you sighted in with at 100 yd. BC back-calculated from Hornady's velocity table; 2,910 fps is from a 24\" test barrel." },
     ablr: { name: "168 gr AccuBond LR (handload)", model: "G1", bc: 0.525, mv: 2750, weight: 168, length: 1.39, minExp: 1300,
       note: "Your H4350 load (54.0\u201357.0 gr in your notes, COL 3.330\u20133.340\"). 2,750 fps is a placeholder until you chronograph it from the BLR. Nosler lists this bullet at G1 0.525." },
@@ -798,6 +924,8 @@ function migrateLoads(st) {
   return st;
 }
 migrateLoads(S);
+// BCs fitted to Hornady's tables in Army Standard Metro air (what US makers use), not ICAO; only if never edited.
+[["aw180", 0.433, 0.425], ["aw150", 0.345, 0.338]].forEach(([k, o, n]) => { const L = S.loads && S.loads[k]; if (L && L.bc === o) { L.bc = n; if (L.note) L.note = L.note.replace(String(o), String(n)); } });
 let DB = null, UID = null, dbTimer = null;
 const stateDoc = () => DB.doc("data/users/" + UID + "/state");
 function syncOut() {
@@ -898,7 +1026,15 @@ function switchRifle(id, noSync) {
   ensureLoad(); save(); render();
 }
 const load = () => S.loads[S.load];
-const proj = () => ({ ...load(), ...S.rifle, diameter: diaOf() });
+const FPS_PER_IN = 25; // typical velocity change per inch of barrel for full-size hunting cartridges
+const barrelAdj = (L = load()) => {
+  if (L.mvMeasured || !(S.rifle.barrelIn > 0)) return 0;
+  return Math.max(-150, Math.min(150, (S.rifle.barrelIn - (L.testBarrelIn || 24)) * FPS_PER_IN));
+};
+const effMv = (L = load()) => Math.round(Number(L.mv) + barrelAdj(L));
+// Bullet length for spin drift when the maker doesn't list it: estimated from weight and diameter.
+const estLen = (w, d) => { const sd = w / 7000 / (d * d); return Math.round(d * (2.5 + 5.7 * sd) * 1000) / 1000; };
+const proj = () => { const L = load(), d = diaOf(); return { ...L, ...S.rifle, diameter: d, mv: effMv(L), length: L.length > 0 ? L.length : estLen(L.weight, d) }; };
 const envNow = (o = {}) => ({ ...S.env, ...o });
 const zEnv = () => S.zeroEnv;
 // Energy guidelines by animal (common hunting rules of thumb, not hard limits)
@@ -1031,6 +1167,10 @@ function afterRender() {
   const w = $("callWind").innerHTML;
   $("hudCall").innerHTML = $("callElev").innerHTML + (w ? " · " + w : "");
   $("hudSub").textContent = `${S.range} yd · ${S.env.windMph ? `wind ${S.env.windMph} mph from your ${clockNames[S.env.windClock]} o'clock` : "no wind"}${S.env.angle ? ` · ${S.env.angle > 0 ? "+" : ""}${S.env.angle}°` : ""}`;
+  // the numbers sit with the answer at the range; under Details while hunting
+  if (S.use === "range") { if ($("stats").parentNode !== $("rStatsBox")) $("rStatsBox").append($("stats")); }
+  else if ($("stats").parentNode !== $("morePanel")) $("morePanel").insertBefore($("stats"), $("flags"));
+  renderScopeView();
   buzz($("callElev").textContent + "|" + $("callWind").textContent);
   hudShow();
 }
@@ -1096,6 +1236,7 @@ const poiInput = (id, key) => $(id).addEventListener("input", () => {
 poiInput("poiUp", "poiUp"); poiInput("poiRight", "poiRight");
 $("poiClear").onclick = () => { delete load().poiUp; delete load().poiRight; $("poiUp").value = ""; $("poiRight").value = ""; save(); render(); };
 $("model").addEventListener("change", e => { load().model = e.target.value; save(); render(); });
+$("mvMeas").addEventListener("change", e => { load().mvMeasured = e.target.checked; save(); render(); });
 // Big +/- buttons for gloves; the range number itself opens the keypad for a rangefinder reading.
 const stepBtn = (id, fn) => { $(id).onclick = () => { fn(); save(); render(); }; };
 stepBtn("rDown", () => S.range = clampN(S.range - 25, 25, 1000)); stepBtn("rUp", () => S.range = clampN(S.range + 25, 25, 1000));
@@ -1114,6 +1255,194 @@ $("sunBtn").onclick = () => { S.sun = !S.sun; save(); render(); };
 $("noWind").onclick = () => { S.env.windMph = 0; save(); render(); };
 $("mDial").onclick = () => { S.mode = "dial"; save(); render(); };
 $("mHold").onclick = () => { S.mode = "hold"; save(); render(); };
+// ---------- Hunt / Range ----------
+// Hunt: is this a clean kill on this animal, and where do I hold. Range: the numbers, my targets, my groups.
+const PLATES = [0, 6, 8, 10, 12, 18, 24];
+function useDefaults() {
+  if (S.use !== "range") S.use = "hunt";
+  if (!PLATES.includes(S.plate)) S.plate = 10;
+  if (!Array.isArray(S.targets)) S.targets = [100, 200, 300, 400, 500].map(r => ({ r, size: r <= 100 ? 8 : r <= 300 ? 10 : 12 }));
+  if (!Array.isArray(S.groups)) S.groups = [];
+}
+const tile = (cls, label, val, sub) => `<div class="tile ${cls}"><span>${label}</span><b>${val}</b><small>${sub}</small></div>`;
+const uDecs = () => sc().unit === "MOA" ? 1 : 2;
+// What you'd dial (or hold) for one solution, in the scope's units. q = dialed amount on the clicks, null if below zero.
+function callOf(s) {
+  const cv = sc().click, eU = -ang(s, "e"), wU = -ang(s, "w");
+  return { eU, wU, q: eU < -cv / 2 ? null : Math.max(0, Math.round(eU / cv)) * cv };
+}
+// Farthest range at which each animal still gets enough energy AND the bullet still expands, with this load and air.
+const LIM_R = Array.from({ length: 196 }, (_, i) => 25 + i * 5);
+let limKey = "", limVal = {};
+function limits() {
+  const key = JSON.stringify([proj(), S.env, S.zeroEnv, S.zeroLoad, S.rifle.zeroRange]);
+  if (key === limKey) return limVal;
+  const pts = solveAt(LIM_R, { windMph: 0, angle: 0 }), L = load(), out = {};
+  Object.entries(SPECIES).forEach(([k, sp]) => {
+    let last = 0;
+    for (const p of pts) { if (p && p.e >= sp.e && p.v >= L.minExp) last = p.r; else break; }
+    out[k] = last;
+  });
+  limKey = key; limVal = out; return out;
+}
+function renderHunt(sol) {
+  if (S.use !== "hunt") return;
+  const L = load(), lim = limits(), sp = animal(), e = Math.round(sol.e), v = Math.round(sol.v);
+  $("species").innerHTML = Object.entries(SPECIES).map(([k, a]) => {
+    const ok = e >= a.e && v >= L.minExp;
+    return `<button class="chip${ok ? "" : " no"}" type="button" data-sp="${k}" aria-pressed="${k === S.species}" aria-label="${a.name}: ${ok ? "enough" : "not enough"} at ${S.range} yards">${a.name} ${ok ? "✓" : "✗"}</button>`;
+  }).join("");
+  $("species").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.species = c.dataset.sp; save(); render(); });
+  const eOk = e >= sp.e, vOk = v >= L.minExp, lr = lim[S.species] || 0, nm = sp.name.toLowerCase();
+  $("shotCheck").innerHTML =
+    tile(eOk ? "good" : "bad", "Energy ft-lb", `${e.toLocaleString()} ${eOk ? "✓" : "✗"}`, `${nm} needs ${sp.e.toLocaleString()}`) +
+    tile(!vOk ? "bad" : v < L.minExp + 100 ? "warn" : "good", "Speed fps", `${v.toLocaleString()} ${vOk ? "✓" : "✗"}`, vOk ? (v < L.minExp + 100 ? "barely expands" : `expands above ${Number(L.minExp).toLocaleString()}`) : `won't expand under ${Number(L.minExp).toLocaleString()}`) +
+    tile(lr && S.range > lr ? "bad" : "", `${sp.name} limit`, lr >= 1000 ? "1,000+ yd" : lr ? `≈${lr} yd` : "none", !lr ? "this load is too light" : S.range > lr ? `you're ${S.range - lr} yd past` : "with this load");
+}
+
+// Range mode
+const today = () => new Date().toDateString();
+const inPerU = (u, r) => u === "MOA" ? 1.0472 * r / 100 : 3.6 * r / 100;
+function grpStats(g) {
+  const h = g.hits, n = h.length; if (!n) return null;
+  let es = 0;
+  for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) es = Math.max(es, Math.hypot(h[i][0] - h[j][0], h[i][1] - h[j][1]));
+  const cx = h.reduce((a, p) => a + p[0], 0) / n, cy = h.reduce((a, p) => a + p[1], 0) / n;
+  return { n, es, esIn: es * inPerU(g.unit, g.r), cx, cy };
+}
+const offTxt = (cx, cy, u) => {
+  const t = [], d = u === "MOA" ? 1 : 2, tiny = u === "MOA" ? 0.1 : 0.03;
+  if (Math.abs(cy) >= tiny) t.push(`${fmt(Math.abs(cy), d)} ${cy < 0 ? "low" : "high"}`);
+  if (Math.abs(cx) >= tiny) t.push(`${fmt(Math.abs(cx), d)} ${cx < 0 ? "left" : "right"}`);
+  return t.length ? t.join(", ") : "centered";
+};
+// The muzzle velocity that makes the app's call land where this group actually centered.
+function fitMv(g) {
+  const need = g.callU - g.cy;
+  let lo = 1500, hi = 3800;
+  for (let i = 0; i < 32; i++) {
+    const mid = (lo + hi) / 2, s = solveAt([g.r], { ...g.env, windMph: 0 }, { mv: mid })[0];
+    if (!s) { lo = mid; continue; }
+    if (-ang(s, "e") > need) lo = mid; else hi = mid;
+  }
+  return (lo + hi) / 2;
+}
+let tuUndo = null;
+function trueUpHtml() {
+  const L = load(), U = sc().unit, gs = S.groups.filter(g => g.day === today() && g.load === S.load && g.unit === U && g.hits.length >= 2).map(g => ({ ...g, ...grpStats(g) }));
+  if (tuUndo) return `<p>Muzzle velocity set to <b>${L.mv} fps</b> (was ${tuUndo.mv} fps).</p><button class="btn" id="tuUndo" type="button">Undo</button>`;
+  if (!gs.length) return "";
+  const wavg = (a, f) => a.reduce((s, g) => s + f(g) * g.n, 0) / a.reduce((s, g) => s + g.n, 0);
+  const near = gs.filter(g => g.r <= 150), far = gs.filter(g => g.r >= 250), d = uDecs();
+  if (near.length) {
+    const z = wavg(near, g => g.cy);
+    if (Math.abs(z) >= (U === "MOA" ? 0.4 : 0.12)) return `<p><b>Check your zero first.</b> At ${[...new Set(near.map(g => g.r))].join(", ")} yd your groups centered ${fmt(Math.abs(z), d)} ${U} ${z < 0 ? "low" : "high"}. Fix the zero before truing velocity at distance, or every long shot will carry that error too.</p>`;
+  }
+  const shots = far.reduce((s, g) => s + g.n, 0);
+  if (!far.length || shots < 5) return far.length ? `<p>Log at least 5 shots at 250 yd or more to check this load's velocity.</p>` : "";
+  const up = wavg(far, g => g.cy), mv = Math.round(wavg(far, g => fitMv(g))), at = [...new Set(far.map(g => g.r))].join(" and ");
+  const now = effMv(L);
+  if (Math.abs(mv - now) < 15 || Math.abs(up) < (U === "MOA" ? 0.3 : 0.1))
+    return `<p><b>Your long groups match the call.</b> At ${at} yd they centered ${offTxt(0, up, U)} of where the app said. ${now} fps fits.</p>`;
+  if (Math.abs(mv - now) > 200)
+    return `<p><b>Your long shots land ${fmt(Math.abs(up), d)} ${U} ${up < 0 ? "low" : "high"}</b>, but fixing that would take a ${Math.abs(mv - now)} fps change, too much to be velocity. Check that each group was logged with what you actually dialed, and your zero.</p>`;
+  return `<p><b>Your long shots are landing ${up < 0 ? "low" : "high"}.</b> At ${at} yd your groups centered about ${fmt(Math.abs(up), d)} ${U} ${up < 0 ? "under" : "over"} the call. Your rifle is likely shooting this load ${mv < now ? "slower" : "faster"} than ${now} fps; your groups fit <b>${mv} fps</b>.</p><button class="btn primary" id="tuApply" type="button" data-mv="${mv}">True it up: use ${mv} fps</button>`;
+}
+function renderRange() {
+  const U = sc().unit, d = uDecs();
+  $("plates").innerHTML = PLATES.map(v => `<button class="chip" type="button" data-v="${v}" aria-pressed="${v === S.plate}">${v ? v + "″" : "None"}</button>`).join("");
+  $("plates").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.plate = +c.dataset.v; save(); render(); });
+  $("plateNote").textContent = S.plate ? `A ${S.plate}″ target at ${S.range} yd is ${fmt(S.plate / unitIn(S.range), d)} ${U} wide: ±${fmt(S.plate / 2 / unitIn(S.range), d)} ${U} of room. It's drawn on the reticle.` : "";
+  // targets
+  const idx = S.targets.map((t, i) => i).sort((a, b) => S.targets[a].r - S.targets[b].r);
+  const sols = solveAt(idx.map(i => S.targets[i].r));
+  $("tgts").innerHTML = idx.map((i, n) => {
+    const t = S.targets[i], s = sols[n];
+    let call = "out of range";
+    if (s) {
+      const c = callOf(s);
+      call = (c.q === null ? `hold ${fmt(Math.abs(s.dropIn), 1)}″ low` : c.q === 0 ? "on zero" : `↑${fmtU(c.q)}`) + (Math.abs(s.windIn) >= 0.5 ? ` · ${fmt(Math.abs(c.wU), d)}${c.wU > 0 ? "R" : "L"}` : "");
+    }
+    return `<div class="tgt"><button class="go" type="button" data-i="${i}" aria-pressed="${t.r === S.range}"><span>${t.r} yd</span><span>${call}</span><small>${t.size ? t.size + "″" : ""}</small></button><button class="btn x" type="button" data-x="${i}" aria-label="Remove the ${t.r} yard target">✕</button></div>`;
+  }).join("") || `<span class="note">Add the distances you shoot.</span>`;
+  $("tgts").querySelectorAll(".go").forEach(b => b.onclick = () => { const t = S.targets[b.dataset.i]; S.range = t.r; if (t.size) S.plate = t.size; save(); render(); window.scrollTo({ top: 0 }); });
+  $("tgts").querySelectorAll(".x").forEach(b => b.onclick = () => { S.targets.splice(+b.dataset.x, 1); save(); render(); });
+  if (!$("tgtS").options.length) $("tgtS").innerHTML = PLATES.filter(Boolean).map(v => `<option value="${v}"${v === 10 ? " selected" : ""}>${v}″</option>`).join("");
+  // groups
+  const mine = S.groups.map((g, i) => ({ g, i })), now = mine.filter(x => x.g.day === today()), show = (now.length ? now : mine.slice(-3)).reverse();
+  $("grpWhen").textContent = now.length ? "today" : show.length ? "earlier" : "";
+  $("grps").innerHTML = show.map(({ g, i }) => {
+    const st = grpStats(g);
+    return `<div class="grp"><span><b>${g.r} yd</b> · ${st.n} shot${st.n > 1 ? "s" : ""} · ${fmt(st.esIn, 1)}″ · ${offTxt(st.cx, st.cy, g.unit)}${now.length ? "" : ` · ${g.day.slice(4, 10)}`}</span><b>${fmt(st.es, 2)} ${g.unit}</b><button class="btn x" type="button" data-g="${i}" aria-label="Delete this group">✕</button></div>`;
+  }).join("");
+  $("grps").querySelectorAll(".x").forEach(b => b.onclick = () => { S.groups.splice(+b.dataset.g, 1); save(); render(); });
+  $("trueUp").innerHTML = trueUpHtml();
+  if ($("tuApply")) $("tuApply").onclick = () => { const L = load(); tuUndo = { key: S.load, mv: L.mv, meas: !!L.mvMeasured }; L.mv = +$("tuApply").dataset.mv; L.mvMeasured = true; L.trued = { from: tuUndo.mv, at: new Date().toISOString() }; save(); render(); };
+  if ($("tuUndo")) $("tuUndo").onclick = () => { if (S.loads[tuUndo.key]) { S.loads[tuUndo.key].mv = tuUndo.mv; S.loads[tuUndo.key].mvMeasured = tuUndo.meas; delete S.loads[tuUndo.key].trued; } tuUndo = null; save(); render(); };
+}
+
+// Full-screen overlays
+function ovOpen(id) { $(id).hidden = false; document.body.classList.add("ovopen"); }
+function ovClose(id) { $(id).hidden = true; if ($("scopeView").hidden && $("groupView").hidden) document.body.classList.remove("ovopen"); }
+function renderScopeView() {
+  if ($("scopeView").hidden) return;
+  const stop = $("alerts").querySelector("h3");
+  $("svElev").innerHTML = $("callElev").innerHTML; $("svWind").innerHTML = $("callWind").innerHTML;
+  $("svSub").textContent = (stop ? stop.textContent.toUpperCase() + " · " : "") + $("callElevSub").textContent;
+  $("svSub").style.color = stop ? "var(--bad)" : "";
+  $("svRange").innerHTML = `${S.range} <small>yd</small>`;
+  $("svWindV").innerHTML = S.env.windMph ? `${S.env.windMph} <small>mph from ${clockNames[S.env.windClock]}:00</small>` : `0 <small>mph wind</small>`;
+}
+// Log a group: tap each hit on your own reticle, around where you aimed.
+let gv = null;
+function openGroup() {
+  const sol = lastSol; if (!sol) return;
+  const SC = sc(), c = callOf(sol), d = uDecs();
+  gv = { r: S.range, unit: SC.unit, load: S.load, loadName: load().name, day: today(), t: Date.now(), env: { ...S.env }, mode: S.mode,
+    callU: S.mode === "dial" && c.q !== null ? c.q : c.eU, holdE: S.mode === "dial" ? 0 : Math.max(0, c.eU), holdW: Math.abs(sol.windIn) < 0.5 ? 0 : c.wU, hits: [] };
+  $("gvSub").textContent = `${gv.r} yd · ${S.mode === "dial" ? (c.q === null ? "no dial" : `dialed ${fmtU(c.q)} ${SC.unit} up`) : `held ${fmt(Math.max(0, c.eU), d)} ${SC.unit} up`}${gv.holdW ? ` · held ${fmt(Math.abs(gv.holdW), d)} ${gv.holdW > 0 ? "right" : "left"}` : ""} · ${gv.loadName}`;
+  $("gvHelp").textContent = `Tap where each shot hit, as you saw it through the scope at ${SC.plane === "FFP" ? "any power" : SC.trueMag + "x"}. Each mark is 1 ${SC.unit} (${fmt(inPerU(SC.unit, gv.r), 1)}″ at ${gv.r} yd).${S.plate ? ` The shaded ring is your ${S.plate}″ target.` : ""}`;
+  ovOpen("groupView"); drawGroup();
+}
+function drawGroup() {
+  const SC = sc(), r = retSvg(gv.holdE, gv.holdW, true, { mag: SC.trueMag, plateIn: S.plate, range: gv.r }), k = r.k, z = (SC.unit === "MOA" ? 1 : 0.3) * k;
+  gv.hx = r.hx; gv.hy = r.hy;
+  const st = grpStats(gv);
+  let ex = r.s + gv.hits.map(([x, y]) => `<circle class="hit" cx="${r.hx + x * k}" cy="${r.hy - y * k}" r="${0.55 * z}" fill="var(--ink)" stroke="var(--bg)" stroke-width="${0.15 * z}"/>`).join("");
+  if (st && st.n > 1) { const cx = r.hx + st.cx * k, cy = r.hy - st.cy * k; ex += `<path d="M${cx - z} ${cy}H${cx + z}M${cx} ${cy - z}V${cy + z}" stroke="var(--accent)" stroke-width="${0.25 * z}"/>`; }
+  const far = gv.hits.reduce((m, [x, y]) => Math.max(m, Math.abs(x) * k, Math.abs(y) * k), 0), span = Math.max(16 * z, 2 * far + 4 * z);
+  $("gvRet").innerHTML = ex; $("gvRet").setAttribute("viewBox", `${r.hx - span / 2} ${r.hy - span / 2} ${span} ${span}`);
+  $("gvStats").innerHTML = tile("", "Shots", st ? st.n : 0, st ? "tap to add more" : "tap the hits") +
+    tile("", "Group", st && st.n > 1 ? `${fmt(st.es, 2)} ${gv.unit}` : "–", st && st.n > 1 ? `${fmt(st.esIn, 1)}″ across` : "needs 2 shots") +
+    tile("", "Center", st ? offTxt(st.cx, st.cy, gv.unit) : "–", st ? `${gv.unit} from your aim` : "");
+  $("gvSave").disabled = !st;
+}
+$("gvRet").addEventListener("pointerdown", e => {
+  if (!gv) return;
+  const svg = $("gvRet"), m = svg.getScreenCTM(); if (!m) return;
+  const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+  const q = pt.matrixTransform(m.inverse()), k = retK(), rd = v => Math.round(v * 100) / 100;
+  gv.hits.push([rd((q.x - gv.hx) / k), rd(-(q.y - gv.hy) / k)]); drawGroup();
+});
+$("gvUndo").onclick = () => { if (gv && gv.hits.length) { gv.hits.pop(); drawGroup(); } };
+$("gvSave").onclick = () => { if (!gv || !gv.hits.length) return; const { hx, hy, ...g } = gv; S.groups.push(g); S.groups = S.groups.slice(-200); gv = null; ovClose("groupView"); save(); render(); };
+$("gvClose").onclick = () => { gv = null; ovClose("groupView"); };
+$("grpLog").onclick = openGroup;
+$("retOpen").onclick = () => { ovOpen("scopeView"); render(); };
+$("svClose").onclick = () => ovClose("scopeView");
+document.addEventListener("keydown", e => { if (e.key === "Escape") { if (!$("groupView").hidden) $("gvClose").click(); else if (!$("scopeView").hidden) ovClose("scopeView"); } });
+stepBtn("svRDown", () => S.range = clampN(S.range - 5, 25, 1000)); stepBtn("svRUp", () => S.range = clampN(S.range + 5, 25, 1000));
+stepBtn("svWDown", () => S.env.windMph = clampN(S.env.windMph - 1, 0, 40)); stepBtn("svWUp", () => S.env.windMph = clampN(S.env.windMph + 1, 0, 40));
+$("uHunt").onclick = () => { S.use = "hunt"; save(); render(); window.scrollTo({ top: 0 }); };
+$("uRange").onclick = () => { S.use = "range"; save(); render(); window.scrollTo({ top: 0 }); };
+$("tgtAdd").onclick = () => {
+  const r = Math.round(parseFloat($("tgtR").value)), size = +$("tgtS").value;
+  if (!(r >= 25 && r <= 1000)) { $("tgtR").focus(); return; }
+  const have = S.targets.find(t => t.r === r);
+  if (have) have.size = size; else S.targets.push({ r, size });
+  $("tgtR").value = ""; save(); render();
+};
+
 // ---------- rifles and scopes ----------
 $("rCal").innerHTML = Object.keys(CALIBERS).map(c => `<option>${c}</option>`).join("");
 const CLICKS = { MOA: [0.25, 0.125, 0.5, 1], MIL: [0.1, 0.05, 0.2] };
@@ -1383,12 +1712,12 @@ function drawClock() {
 }
 
 // Hold picture: a plain MOA grid (not a copy of any maker's reticle). 1 MOA = 5 px, true at 15x.
-function drawReticle(elevU, windU, showHold) {
+function retSvg(elevU, windU, showHold, o = {}) {
   // Plain grid in the scope's own units (not a copy of any maker's reticle). Inputs are in reticle marks.
   const SC = sc(), U = SC.unit, isMoa = U === "MOA";
   const k = isMoa ? 5 : 5 * 3.43775, minor = isMoa ? 1 : 0.5, major = isMoa ? 2 : 1, wMax = isMoa ? 18 : 8, eMax = isMoa ? 29 : 8;
   const crossStep = isMoa ? 2 : 1, skip = isMoa ? [2, 6] : [1];
-  const mag = S.mode === "hold" ? S.mag : SC.trueMag, px = m => m * k, near = (a, b) => Math.abs(a - b) < 1e-6;
+  const mag = o.mag || (S.mode === "hold" ? S.mag : SC.trueMag), px = m => m * k, near = (a, b) => Math.abs(a - b) < 1e-6;
   const sun = !!S.sun && theme !== "red", bg = sun ? "#FFFFFF" : "var(--sunk)", ink = sun ? "#000000" : "var(--ink)",
         lab = sun ? "#000000" : "var(--muted)", hot = sun ? "#D10000" : "var(--accent)", w = sun ? 1.6 : 1;
   let s = `<circle r="160" fill="${bg}" stroke="${ink}" stroke-width="${sun ? 3 : 2}"/>`;
@@ -1413,6 +1742,11 @@ function drawReticle(elevU, windU, showHold) {
     const clipped = Math.abs(windU) > wMax || elevU > eMax;
     // red ring 2 MOA across (about 0.6 MIL), measured to its outer edge; center dot
     const ring = sun ? "#D10000" : "var(--bad)";
+    // Range: the target drawn to scale around the hold, so you can see your room for error.
+    if (o.plateIn > 0 && o.range > 0) {
+      const pr = o.plateIn / 2 / unitIn(o.range) * (o.markF || 1) * k;
+      s += `<circle class="plate" cx="${hx}" cy="${hy}" r="${pr}" fill="${hot}" fill-opacity=".14" stroke="${hot}" stroke-width=".8" stroke-dasharray="2 2"/>`;
+    }
     s += `<circle cx="${hx}" cy="${hy}" r="${sun ? 4 : 4.2}" fill="none" stroke="${ring}" stroke-width="${sun ? 2 : 1.6}"/><circle cx="${hx}" cy="${hy}" r="2.4" fill="${sun ? "#FF8A00" : "var(--dot)"}" stroke="#000000" stroke-width=".5"/>`;
     if (clipped) s += `<text y="150" text-anchor="middle" font-size="10" font-weight="700" fill="${hot}">hold is past the marks</text>`;
   } else s += `<circle cx="0" cy="0" r="2" fill="none" stroke="${hot}" stroke-width="1"/>`;
@@ -1420,7 +1754,25 @@ function drawReticle(elevU, windU, showHold) {
   const magTxt = SC.plane === "FFP" ? `FFP · marks = true ${U} at any power` : mag === SC.trueMag ? `${mag}x · marks = true ${U}` : `${mag}x · 1 mark = ${(SC.trueMag / mag).toFixed(2)} ${U}`;
   s += `<rect x="-86" y="-150" width="172" height="18" rx="9" fill="${sun ? "#000000" : "var(--surface)"}" stroke="${ink}" stroke-width=".8"/>`;
   s += `<text x="0" y="-137.5" text-anchor="middle" font-size="9.5" font-weight="700" fill="${sun ? "#FFFFFF" : "var(--ink)"}">${magTxt}</text>`;
-  $("reticle").innerHTML = s;
+  const hx = showHold ? Math.max(-150, Math.min(150, px(windU))) : 0, hy = showHold ? Math.max(-150, Math.min(150, px(elevU))) : 0;
+  return { s: s + (o.extra || ""), hx, hy, k, magTxt, clipped: showHold && (Math.abs(windU) > wMax || elevU > eMax) };
+}
+const retK = () => sc().unit === "MOA" ? 5 : 5 * 3.43775; // reticle px per unit
+// Square viewBox around the crosshair center and the hold, with room around them; never past the reticle's edge.
+function zoomBox(hx, hy, pad, minSpan) {
+  const x0 = Math.min(0, hx) - pad, x1 = Math.max(0, hx) + pad, y0 = Math.min(0, hy) - pad, y1 = Math.max(0, hy) + pad;
+  const span = Math.min(340, Math.max(minSpan, x1 - x0, y1 - y0));
+  const cx = Math.max(-170 + span / 2, Math.min(170 - span / 2, (x0 + x1) / 2)), cy = Math.max(-170 + span / 2, Math.min(170 - span / 2, (y0 + y1) / 2));
+  return `${cx - span / 2} ${cy - span / 2} ${span} ${span}`;
+}
+// The same reticle drawing everywhere: zoomed next to the answer, whole in the scope view.
+function drawReticle(elevU, windU, showHold, o = {}) {
+  const r = retSvg(elevU, windU, showHold, o), plateR = o.plateIn > 0 ? o.plateIn / 2 / unitIn(o.range) * (o.markF || 1) * r.k : 0;
+  $("reticle").innerHTML = r.s;
+  const z = (sc().unit === "MOA" ? 1 : 0.3) * r.k; // about 1 MOA in px, either unit
+  $("reticle").setAttribute("viewBox", zoomBox(r.hx, r.hy, Math.max(4 * z, plateR + 2 * z), 15 * z));
+  $("reticleBig").innerHTML = r.s;
+  $("retCap").textContent = (r.clipped ? "Hold is past the marks · " : "") + r.magTxt + " · tap for full screen";
 }
 
 // ---------- render ----------
@@ -1452,8 +1804,9 @@ function renderCore(fromInput) {
   renderRifle();
   $("sunBtn").setAttribute("aria-pressed", !!S.sun); $("sunBtn").hidden = theme === "red";
   if (!SPECIES[S.species]) S.species = "elk";
-  $("species").innerHTML = Object.entries(SPECIES).map(([k, v]) => `<button class="chip" type="button" data-sp="${k}" aria-pressed="${k === S.species}">${v.name}</button>`).join("");
-  $("species").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.species = c.dataset.sp; save(); render(); });
+  useDefaults();
+  document.body.dataset.use = S.use;
+  $("uHunt").setAttribute("aria-pressed", S.use === "hunt"); $("uRange").setAttribute("aria-pressed", S.use === "range");
   $("noWind").setAttribute("aria-pressed", S.env.windMph === 0);
   $("noWind").classList.toggle("primary", S.env.windMph === 0);
   $("presets").querySelectorAll(".chip").forEach(c => { const p = PRESETS[c.dataset.i]; c.setAttribute("aria-pressed", p.altFt === S.env.altFt && p.tempF === S.env.tempF); });
@@ -1463,6 +1816,10 @@ function renderCore(fromInput) {
   $("favBtn").textContent = load().fav !== false ? "★ Favorite" : "☆ Add to favorites";
   $("loadChips").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.load = c.dataset.k; save(); render(); });
   $("loadNote").textContent = load().note || "";
+  $("mvMeas").checked = !!load().mvMeasured;
+  $("mvNote").textContent = load().mvMeasured ? `Using ${Number(load().mv).toLocaleString()} fps as measured from your rifle.`
+    : barrelAdj() ? `Using ${effMv().toLocaleString()} fps: the box says ${Number(load().mv).toLocaleString()} fps from a ${load().testBarrelIn || 24}" test barrel, and your ${S.rifle.barrelIn}" barrel is figured at ${FPS_PER_IN} fps per inch. Chronograph or true it at the range for the real number.`
+    : `Using the box velocity, ${Number(load().mv).toLocaleString()} fps. Chronograph or true it at the range for the real number.`;
   if (typeof renderLib === "function" && !$("tab-gear").hidden) renderLib();
   if (!S.loads[S.zeroLoad]) S.zeroLoad = S.load;
   const zPrev = $("zLoad").value;
@@ -1490,10 +1847,10 @@ function renderCore(fromInput) {
 
   const sol = solveAt([S.range])[0]; lastSol = sol;
   const L = load();
-  if (!sol) { $("callElev").textContent = "Out of range"; $("callElevSub").textContent = ""; $("callWind").textContent = ""; $("callWindSub").textContent = ""; $("alerts").innerHTML = ""; return; }
+  if (!sol) { $("callElev").textContent = "Out of range"; $("callElevSub").textContent = ""; $("callWind").textContent = ""; $("callWindSub").textContent = ""; $("alerts").innerHTML = ""; $("shotCheck").innerHTML = ""; return; }
   const SC = sc(), U = SC.unit, cv = SC.click, uDec = U === "MOA" ? 1 : 2;
   const eU = -ang(sol, "e"), wU = -ang(sol, "w"); // + = up, + = right, in the scope's units
-  const markF = SC.plane === "FFP" ? 1 : SC.trueMag / S.mag; // reticle marks per unit at this power
+  const markF = SC.plane === "FFP" ? 1 : S.mag / SC.trueMag; // reticle marks per unit at this power (SFP: each mark is trueMag/mag units)
   if (S.mode === "dial") {
     if (eU < -cv / 2) {
       $("callElev").innerHTML = `Hold <span class="n">${fmt(Math.abs(sol.dropIn), 1)}"</span> low`;
@@ -1518,12 +1875,14 @@ function renderCore(fromInput) {
     $("callWindSub").textContent = `${fmt(Math.abs(sol.windIn), 1)}" of drift (${fmt(sol.spinIn, 1)}" of it spin drift).`;
   }
   // Dial mode: elevation is on the turret, so the dot only moves for wind. Hold mode: position in reticle marks.
-  if (S.mode === "dial") drawReticle(0, wU, true);
-  else drawReticle(Math.max(0, eU) * markF, wU * markF, true);
+  const ro = { plateIn: S.use === "range" ? S.plate : 0, range: S.range, markF: S.mode === "dial" ? 1 : markF };
+  if (S.mode === "dial") drawReticle(0, wU, true, ro);
+  else drawReticle(Math.max(0, eU) * markF, wU * markF, true, ro);
 
   $("stats").innerHTML = [
     [fmt(sol.dropIn, 1) + '"', "Path vs. aim"], [Math.round(sol.v), "Impact fps"], [Math.round(sol.e).toLocaleString(), "Energy ft-lb"],
-    [fmt(sol.tof, 2) + "s", "Time of flight"], [fmt(Math.abs(sol.windIn), 1) + '"', "Wind drift"]
+    [fmt(sol.tof, 2) + "s", "Time of flight"], [fmt(Math.abs(sol.windIn), 1) + '"', "Wind drift"],
+    [eU < cv / 2 ? "0" : Math.max(0, Math.round(eU / cv)) + " up", "Clicks"]
   ].map(([b, s]) => `<div class="stat"><b>${b}</b><span>${s}</span></div>`).join("");
 
   const fl = [];
@@ -1540,11 +1899,20 @@ function renderCore(fromInput) {
       ? ["good", "Zero offset", `Scope is zeroed with the ${zn}. Using where this load measured at ${zr} yd (${fmt(load().poiUp || 0, 2)}" up, ${fmt(load().poiRight || 0, 2)}" right).`]
       : ["warn", "Zero offset", `Scope is zeroed with the ${zn}. This includes the physics difference, but not your rifle's own shift with this load. Shoot it at ${zr} yd and enter where it hits in Rifle & load.`]);
   }
+  if (!L.mvMeasured) fl.push(["warn", "Velocity", `${effMv().toLocaleString()} fps is an estimate${barrelAdj() ? ` (box ${Number(L.mv).toLocaleString()} fps, adjusted for your ${S.rifle.barrelIn}" barrel)` : ""}. Chronograph it, or log groups at 300 yd or more in Range mode to true it.`]);
   if (S.env.windMph >= 12 && S.range >= 300) fl.push(["warn", "Wind", `A 3 mph misread here moves impact about ${fmt(Math.abs(sol.windIn) * 3 / S.env.windMph, 1)}". Close the distance if you can.`]);
   const flagHtml = f => f.map(([c, t, d]) => `<div class="flag"><span class="pill ${c}">${t}</span><span>${d}</span></div>`).join("");
   $("flags").innerHTML = flagHtml(fl);
-  // Shot-stoppers stay next to the answer; the rest live under Details.
-  $("alerts").innerHTML = flagHtml(fl.filter(f => f[0] === "bad"));
+  // Hunting: shot-stoppers sit right on top of the answer. At the range they don't apply.
+  const stop = fl.filter(f => f[0] === "bad");
+  $("alerts").innerHTML = S.use === "hunt" && stop.length ? `<div class="noshot" role="alert"><h3>${stop.some(f => /energy/.test(f[1])) ? "No shot on " + animal().name.toLowerCase() : "No shot"}</h3>${flagHtml(stop)}</div>` : "";
+  if (S.zeroLoad && S.zeroLoad !== S.load && S.loads[S.zeroLoad] && !isMeasured()) {
+    const zr = S.rifle.zeroRange, z = BAL.solve(proj(), zEnv(), { ...zEnv(), angle: 0, windMph: 0, spin: false }, [zr], zeroOpts())[0];
+    const cl = z ? Math.round(Math.abs(z.dropIn) / unitIn(zr) / cv) : 0;
+    $("alerts").insertAdjacentHTML("beforeend", `<div class="flag"><span class="pill warn">Zero</span><span>Your scope is zeroed with the ${S.loads[S.zeroLoad].name}. This load's shift is only estimated${z ? ` (${fmt(Math.abs(z.dropIn), 1)}" ${z.dropIn < 0 ? "low" : "high"} at ${zr} yd, ${cl} click${cl === 1 ? "" : "s"})` : ""}. Shoot 3 at ${zr} yd and enter where they hit under Rifle &amp; load.</span></div>`);
+  }
+  renderHunt(sol);
+  if (S.use === "range") renderRange();
   morePending = fl.filter(f => f[0] === "warn").length;
 
   // Zero line: what the rifle is zeroed with, and how this load relates to it.
@@ -1573,8 +1941,8 @@ function renderInsights(sol) {
   }
   const zr = S.rifle.zeroRange, atZero = solveAt([zr])[0];
   if (atZero) items.push([`${atZero.dropIn >= 0 ? "+" : ""}${fmt(atZero.dropIn, 1)}"`, "Your zero today", `Zeroed at ${S.zeroEnv.altFt.toLocaleString()} ft and ${S.zeroEnv.tempF}°F, your ${zr} yd zero now prints ${fmt(Math.abs(atZero.dropIn), 1)}" ${atZero.dropIn >= 0 ? "high" : "low"} in this air. ${Math.abs(atZero.dropIn) < 0.5 ? "Not worth re-zeroing." : ""}`]);
-  const fast = solveAt([r], {}, { mv: load().mv - 25 })[0];
-  if (fast) items.push([`${fmt(Math.abs(d(sol, fast)), 1)}"`, "Velocity uncertainty", `If your rifle is 25 fps slower than ${load().mv}, you'd hit ${fmt(Math.abs(d(sol, fast)), 1)}" lower at ${r} yd. That's why you chronograph or true.`]);
+  const fast = solveAt([r], {}, { mv: effMv() - 25 })[0];
+  if (fast) items.push([`${fmt(Math.abs(d(sol, fast)), 1)}"`, "Velocity uncertainty", `If your rifle is 25 fps slower than ${effMv()}, you'd hit ${fmt(Math.abs(d(sol, fast)), 1)}" lower at ${r} yd. That's why you chronograph or true.`]);
   const near = solveAt([Math.max(25, r - 25), r + 25]);
   if (near.length === 2) items.push([`${fmt(Math.abs(near[1].dropIn - near[0].dropIn) / 2, 1)}"`, "Ranging error", `Each 25 yd you misjudge at this distance costs about ${fmt(Math.abs(near[1].dropIn - near[0].dropIn) / 2, 1)}" of elevation.`]);
   const w1 = solveAt([r], { windMph: 1, windClock: 3, spin: false })[0];
@@ -1589,17 +1957,18 @@ function renderInsights(sol) {
 // ---------- dope card ----------
 function renderCard() {
   const ranges = []; for (let r = 100; r <= 1000; r += 50) ranges.push(r);
-  const rows = solveAt(ranges, { windMph: 10, windClock: 3, angle: 0 });
+  const rows = solveAt(ranges, { windMph: 10, windClock: 3, angle: 0 }), still = solveAt(ranges, { windMph: 0, angle: 0 }), windOnly = solveAt(ranges, { windMph: 10, windClock: 3, angle: 0, spin: false });
   const L = load(), u = unit();
-  let h = `<thead><tr><th>Yd</th><th>Dial ${u}</th><th>Clicks</th><th>Drop in</th><th>10mph ${u}</th><th>fps</th><th>ft-lb</th></tr></thead><tbody>`;
-  rows.forEach(s => {
+  let h = `<thead><tr><th>Yd</th><th>Dial ${u}</th><th>Clicks</th><th>Drop in</th><th>10mph ${u}</th><th>Spin ${u}</th><th>fps</th><th>ft-lb</th></tr></thead><tbody>`;
+  rows.forEach((s, i) => {
+    const wOnly = windOnly[i] ? Math.abs(ang(windOnly[i], "w")) : 0, spinU = still[i] ? ang(still[i], "w") : 0;
     const up = -ang(s, "e"), cl = Math.round(up / sc().click);
     const cur = Math.abs(s.r - S.range) < 25 ? "cur" : "";
-    h += `<tr class="${cur}"><td>${s.r}</td><td>${up < 0 ? "hold" : fmt(up, u === "MOA" ? 2 : 2)}</td><td>${cl < 0 ? "–" : cl}</td><td>${fmt(s.dropIn, 1)}</td><td>${fmt(Math.abs(ang(s, "w")), 1)}</td><td class="${s.v < L.minExp ? "bad" : ""}">${Math.round(s.v)}</td><td class="${s.e < animal().e ? "bad" : ""}">${Math.round(s.e).toLocaleString()}</td></tr>`;
+    h += `<tr class="${cur}"><td>${s.r}</td><td>${up < 0 ? "hold" : fmt(up, u === "MOA" ? 2 : 2)}</td><td>${cl < 0 ? "–" : cl}</td><td>${fmt(s.dropIn, 1)}</td><td>${fmt(wOnly, 1)}</td><td>${fmt(Math.abs(spinU), 1)}${spinU >= 0.05 ? "R" : spinU <= -0.05 ? "L" : ""}</td><td class="${s.v < L.minExp ? "bad" : ""}">${Math.round(s.v)}</td><td class="${s.e < animal().e ? "bad" : ""}">${Math.round(s.e).toLocaleString()}</td></tr>`;
   });
   $("cardTbl").innerHTML = h + "</tbody>";
   $("cardCond").textContent = `${L.name} · ${S.env.altFt.toLocaleString()} ft, ${S.env.tempF}°F`;
-  { const SC = sc(); $("cardNote").textContent = `Dial = ${u} up${SC.name ? ` on your ${SC.name}` : ""} (${SC.click} ${u} clicks). Wind column is for a 10 mph full-value wind; hold that many ${u} into the wind and scale for weaker winds (5 mph = half). Red numbers are below the bullet's expansion speed or under the energy guideline for the animal picked on the Shoot tab.`; }
+  { const SC = sc(); $("cardNote").textContent = `Dial = ${u} up${SC.name ? ` on your ${SC.name}` : ""} (${SC.click} ${u} clicks). Flat ground, no angle. Wind column is a 10 mph full-value wind alone: hold that many ${u} into the wind and scale it (5 mph = half). Spin drift always pushes right, so also hold that much left: wind from the right, hold right by wind minus spin; from the left, hold left by wind plus spin. Red numbers are below the bullet's expansion speed or under the energy guideline for the animal picked on the Shoot tab.`; }
 
   // chart + MPBR
   const vit = S.vital;
@@ -1641,7 +2010,7 @@ function renderCard() {
 // ---------- truing ----------
 $("tGo").onclick = () => {
   const r = parseFloat($("tRange").value), m = parseFloat($("tMoa").value);
-  if (!(r > 0) || isNaN(m)) { $("tOut").textContent = `Enter the range and the ${unit()} you dialed to hit.`; return; }
+  if (!(r > 0) || isNaN(m)) { $("tOut").textContent = `Enter the range and the ${unit()} you dialed to hit. Set Air today on the Shoot screen to the air you shot in first.`; return; }
   let lo = 2000, hi = 3400;
   for (let i = 0; i < 30; i++) {
     const mid = (lo + hi) / 2, s = solveAt([r], { windMph: 0, angle: 0 }, { mv: mid })[0];
@@ -1650,7 +2019,7 @@ $("tGo").onclick = () => {
   }
   const mv = Math.round((lo + hi) / 2);
   $("tOut").innerHTML = `Your data fits <b>${mv} fps</b>. <button class="btn" id="tApply">Use it</button>`;
-  $("tApply").onclick = () => { load().mv = mv; save(); $("tOut").textContent = `Muzzle velocity set to ${mv} fps.`; render(); };
+  $("tApply").onclick = () => { load().mv = mv; load().mvMeasured = true; save(); $("tOut").textContent = `Muzzle velocity set to ${mv} fps, measured from your rifle.`; render(); };
 };
 
 // ---------- quiz ----------
@@ -1744,7 +2113,7 @@ $("aCancel").onclick = closeAdd;
 
 // Fit a G1 BC to a printed velocity table (preferred) or drop table, standard sea-level air.
 function fitBC(mv, weight, vt, dt, zeroYd) {
-  const std = { altFt: 0, tempF: 59, rh: 0, pressure: 29.92, angle: 0, windMph: 0, spin: false };
+  const std = { altFt: 0, tempF: 59, rh: 78, pressure: 29.53, angle: 0, windMph: 0, spin: false }; // Army Standard Metro, what US makers print their tables in
   const useV = vt.length >= 2, pts = useV ? vt : dt; if (pts.length < 2) return null;
   const ranges = pts.map(p => p.yd);
   const err = bc => {
@@ -1851,11 +2220,11 @@ $("delLoad").onclick = () => {
 function getSolution() {
   const s = solveAt([S.range])[0], L = load(), zl = S.loads[S.zeroLoad];
   if (!s) return { error: "Out of range for this load." };
-  const SC = sc(), U = SC.unit, cv = SC.click, elev = -ang(s, "e"), w = -ang(s, "w"), mf = SC.plane === "FFP" ? 1 : SC.trueMag / S.mag, d = U === "MOA" ? 2 : 2;
+  const SC = sc(), U = SC.unit, cv = SC.click, elev = -ang(s, "e"), w = -ang(s, "w"), mf = SC.plane === "FFP" ? 1 : S.mag / SC.trueMag, d = U === "MOA" ? 2 : 2;
   const clicks = Math.round(Math.max(0, elev) / cv);
   return {
     rifle: S.rifle.name, caliber: rifleCal(), scope: SC.name || "not named", units: U,
-    load: L.name, muzzleVelocityFps: L.mv,
+    load: L.name, muzzleVelocityFps: effMv(L), velocityMeasured: !!L.mvMeasured,
     zero: { rangeYd: S.rifle.zeroRange, zeroedWith: zl ? zl.name : L.name, sameLoad: !zl || S.zeroLoad === S.load, offsetMeasured: isMeasured() },
     shot: { rangeYd: S.range, angleDeg: S.env.angle, windMph: S.env.windMph, windFromClock: S.env.windClock },
     air: { altitudeFt: S.env.altFt, tempF: S.env.tempF, humidityPct: S.env.rh },
@@ -2031,9 +2400,9 @@ function libToLoad(x) {
   }
   const tb = x.testBarrelIn ? `${x.testBarrelIn}" ` : "";
   return { name: `${maker} ${x.line} ${x.weightGr} gr ${x.bullet}${x.partNumber ? ` (#${x.partNumber})` : ""}`, model, bc, mv: x.mv, weight: x.weightGr,
-    length: x.componentBulletLengthIn || 0, minExp: x.minExp || 1800, libId: libId(x),
+    length: x.componentBulletLengthIn || 0, minExp: x.minExp || 1800, libId: libId(x), testBarrelIn: x.testBarrelIn || 24,
     caliber: x.caliber || ".30-06 Springfield",
-    note: `${src} ${x.mv} fps from ${maker}'s ${tb}test barrel; your ${S.rifle.barrelIn || 22}" barrel ${(x.testBarrelIn || 24) > (S.rifle.barrelIn || 22) ? "likely runs a little slower" : "may run a little differently"}. Expansion floor ${(x.minExp || 1800).toLocaleString()} fps${x.minExp ? " per the maker" : " is a conservative default"}. ${x.extra ? x.extra + " " : ""}${x.note ? x.note + " " : ""}Source: ${x.url}` };
+    note: `${src} ${x.mv} fps from ${maker}'s ${tb}test barrel; your ${S.rifle.barrelIn || 22}" barrel: the app adjusts ${FPS_PER_IN} fps per inch of difference until you chronograph or true it. Expansion floor ${(x.minExp || 1800).toLocaleString()} fps${x.minExp ? " per the maker" : " is a conservative default"}. ${x.extra ? x.extra + " " : ""}${x.note ? x.note + " " : ""}Source: ${x.url}` };
 }
 const usable = x => !x.noData && x.mv && (x.bcG1 || x.bcG7 || (x.vel && [100, 200, 300, 400, 500].filter(r => x.vel[r]).length >= 2));
 const keyForLib = x => Object.keys(S.loads).find(k => S.loads[k].libId === libId(x));
@@ -2093,7 +2462,7 @@ newQ();
 // Shoot: everything that isn't the answer or a control folds under Details.
 fold($("morePanel"), "more", "Details", () => ["Energy, bullet speed, zero", morePending ? `${morePending} note${morePending > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "));
 // Rifle & load: set-once sections fold to a one-line summary.
-fold($("loadPanel"), "load", "Load", () => `${load().name} · ${Number(load().mv).toLocaleString()} fps`);
+fold($("loadPanel"), "load", "Load", () => `${load().name} · ${effMv().toLocaleString()} fps${load().mvMeasured ? " measured" : barrelAdj() ? " (barrel-adjusted)" : ""}`);
 fold($("rifPanel"), "rifle", "Rifle & scope", () => [S.rifle.name, rifleCal(), sc().name || "scope not set"].filter(Boolean).join(" · "), setupFirst());
 fold($("zeroPanel"), "zero", "Where you zeroed", () => { const zl = S.loads[S.zeroLoad]; return `${S.rifle.zeroRange} yd with ${zl ? zl.name : load().name}`; });
 fold($("truePanel"), "true", "True your velocity", () => "Fix velocity from a real shot at distance");

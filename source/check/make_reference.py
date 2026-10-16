@@ -14,7 +14,7 @@ TABLES = {"G1": TableG1, "G7": TableG7}
 
 
 def atmo(e):
-    kw = dict(altitude=Distance.Foot(e["altFt"]), temperature=Temperature.Fahrenheit(e["tempF"]), humidity=e["rh"])
+    kw = dict(altitude=Distance.Foot(e["altFt"]), temperature=Temperature.Fahrenheit(e["tempF"]), humidity=e["rh"] / 100)  # as a fraction: py-ballisticcalc reads values <= 1 as fractions
     if e.get("pressure"):  # station pressure; 0 means "estimate from altitude", same as the app
         kw["pressure"] = Pressure.InHg(e["pressure"])
     return Atmo(**kw)
@@ -31,9 +31,9 @@ def run(s):
     weapon = Weapon(**w_kw)
     calc = Calculator()
     calc.set_weapon_zero(Shot(weapon=weapon, ammo=ammo, atmo=atmo(s["zeroEnv"])), Distance.Yard(L["zeroRange"]))
-    # The app's clock is where the wind comes FROM, 3 o'clock = from the right. py-ballisticcalc measures
-    # the other way round (90 deg = from the left), so mirror the clock.
-    winds = [Wind(Velocity.MPH(e["windMph"]), Angular.OClock((12 - e["windClock"]) % 12))] if e["windMph"] else []
+    # The app's clock is where the wind comes FROM as the shooter sees it: 12 = from the target (headwind),
+    # 3 = from the right. py-ballisticcalc's 0 is wind from behind and 3 o'clock is from the left, so turn it half way.
+    winds = [Wind(Velocity.MPH(e["windMph"]), Angular.OClock((e["windClock"] + 6) % 12))] if e["windMph"] else []
     shot = Shot(weapon=weapon, ammo=ammo, atmo=atmo(e), look_angle=Angular.Degree(e["angle"]), winds=winds)
     pts = calc.fire(shot, trajectory_range=Distance.Yard(max(s["ranges"]) * 1.1), trajectory_step=Distance.Yard(1)).records
     out = []

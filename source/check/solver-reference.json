@@ -407,6 +407,444 @@
           "tof": 1.7145
         }
       ]
+    },
+    {
+      "name": ".30-06 180gr BLR, elk camp 9000 ft 30F, 10 mph from 12 o'clock (headwind)",
+      "load": {
+        "model": "G1",
+        "bc": 0.425,
+        "mv": 2650,
+        "weight": 180,
+        "sightHeight": 1.65,
+        "zeroRange": 100,
+        "length": 1.246,
+        "twist": 10,
+        "diameter": 0.308
+      },
+      "zeroEnv": {
+        "tempF": 60,
+        "pressure": 0,
+        "altFt": 6035,
+        "rh": 30
+      },
+      "env": {
+        "tempF": 30,
+        "pressure": 0,
+        "altFt": 9000,
+        "rh": 45,
+        "angle": 0,
+        "windMph": 10,
+        "windClock": 12
+      },
+      "ranges": [
+        200,
+        300,
+        400,
+        500,
+        600
+      ],
+      "expected": [
+        {
+          "r": 200,
+          "dropIn": -3.9465,
+          "windIn": 0.4105,
+          "v": 2337.4424,
+          "tof": 0.2411
+        },
+        {
+          "r": 300,
+          "dropIn": -14.2732,
+          "windIn": 0.9155,
+          "v": 2189.3202,
+          "tof": 0.3737
+        },
+        {
+          "r": 400,
+          "dropIn": -31.8689,
+          "windIn": 1.649,
+          "v": 2046.39,
+          "tof": 0.5155
+        },
+        {
+          "r": 500,
+          "dropIn": -57.7891,
+          "windIn": 2.6447,
+          "v": 1908.82,
+          "tof": 0.6673
+        },
+        {
+          "r": 600,
+          "dropIn": -93.2824,
+          "windIn": 3.9445,
+          "v": 1776.94,
+          "tof": 0.8302
+        }
+      ]
+    },
+    {
+      "name": ".30-06 180gr BLR, elk camp, 10 mph from 6 o'clock (tailwind)",
+      "load": {
+        "model": "G1",
+        "bc": 0.425,
+        "mv": 2650,
+        "weight": 180,
+        "sightHeight": 1.65,
+        "zeroRange": 100,
+        "length": 1.246,
+        "twist": 10,
+        "diameter": 0.308
+      },
+      "zeroEnv": {
+        "tempF": 60,
+        "pressure": 0,
+        "altFt": 6035,
+        "rh": 30
+      },
+      "env": {
+        "tempF": 30,
+        "pressure": 0,
+        "altFt": 9000,
+        "rh": 45,
+        "angle": 0,
+        "windMph": 10,
+        "windClock": 6
+      },
+      "ranges": [
+        200,
+        300,
+        400,
+        500,
+        600
+      ],
+      "expected": [
+        {
+          "r": 200,
+          "dropIn": -3.9304,
+          "windIn": 0.4096,
+          "v": 2343.0104,
+          "tof": 0.2408
+        },
+        {
+          "r": 300,
+          "dropIn": -14.2056,
+          "windIn": 0.9125,
+          "v": 2197.5859,
+          "tof": 0.373
+        },
+        {
+          "r": 400,
+          "dropIn": -31.6823,
+          "windIn": 1.6412,
+          "v": 2057.3371,
+          "tof": 0.5141
+        },
+        {
+          "r": 500,
+          "dropIn": -57.3733,
+          "windIn": 2.6282,
+          "v": 1922.4704,
+          "tof": 0.665
+        },
+        {
+          "r": 600,
+          "dropIn": -92.4682,
+          "windIn": 3.9133,
+          "v": 1793.3062,
+          "tof": 0.8266
+        }
+      ]
+    },
+    {
+      "name": ".30-06 180gr BLR, elk camp, 10 mph from 1 o'clock (quartering from the front right)",
+      "load": {
+        "model": "G1",
+        "bc": 0.425,
+        "mv": 2650,
+        "weight": 180,
+        "sightHeight": 1.65,
+        "zeroRange": 100,
+        "length": 1.246,
+        "twist": 10,
+        "diameter": 0.308
+      },
+      "zeroEnv": {
+        "tempF": 60,
+        "pressure": 0,
+        "altFt": 6035,
+        "rh": 30
+      },
+      "env": {
+        "tempF": 30,
+        "pressure": 0,
+        "altFt": 9000,
+        "rh": 45,
+        "angle": 0,
+        "windMph": 10,
+        "windClock": 1
+      },
+      "ranges": [
+        200,
+        300,
+        400,
+        500,
+        600
+      ],
+      "expected": [
+        {
+          "r": 200,
+          "dropIn": -3.9454,
+          "windIn": -0.8741,
+          "v": 2337.8168,
+          "tof": 0.2411
+        },
+        {
+          "r": 300,
+          "dropIn": -14.2686,
+          "windIn": -2.0669,
+          "v": 2189.8762,
+          "tof": 0.3737
+        },
+        {
+          "r": 400,
+          "dropIn": -31.8563,
+          "windIn": -3.8285,
+          "v": 2047.1265,
+          "tof": 0.5154
+        },
+        {
+          "r": 500,
+          "dropIn": -57.761,
+          "windIn": -6.2077,
+          "v": 1909.7387,
+          "tof": 0.6671
+        },
+        {
+          "r": 600,
+          "dropIn": -93.2272,
+          "windIn": -9.254,
+          "v": 1778.0421,
+          "tof": 0.8299
+        }
+      ]
+    },
+    {
+      "name": ".30-06 180gr BLR, elk camp, 10 mph from 5 o'clock (quartering from behind right)",
+      "load": {
+        "model": "G1",
+        "bc": 0.425,
+        "mv": 2650,
+        "weight": 180,
+        "sightHeight": 1.65,
+        "zeroRange": 100,
+        "length": 1.246,
+        "twist": 10,
+        "diameter": 0.308
+      },
+      "zeroEnv": {
+        "tempF": 60,
+        "pressure": 0,
+        "altFt": 6035,
+        "rh": 30
+      },
+      "env": {
+        "tempF": 30,
+        "pressure": 0,
+        "altFt": 9000,
+        "rh": 45,
+        "angle": 0,
+        "windMph": 10,
+        "windClock": 5
+      },
+      "ranges": [
+        200,
+        300,
+        400,
+        500,
+        600
+      ],
+      "expected": [
+        {
+          "r": 200,
+          "dropIn": -3.9315,
+          "windIn": -0.8655,
+          "v": 2342.6388,
+          "tof": 0.2408
+        },
+        {
+          "r": 300,
+          "dropIn": -14.2101,
+          "windIn": -2.0454,
+          "v": 2197.0345,
+          "tof": 0.3731
+        },
+        {
+          "r": 400,
+          "dropIn": -31.6947,
+          "windIn": -3.786,
+          "v": 2056.6069,
+          "tof": 0.5142
+        },
+        {
+          "r": 500,
+          "dropIn": -57.4009,
+          "windIn": -6.1331,
+          "v": 1921.5602,
+          "tof": 0.6651
+        },
+        {
+          "r": 600,
+          "dropIn": -92.5221,
+          "windIn": -9.1329,
+          "v": 1792.2156,
+          "tof": 0.8268
+        }
+      ]
+    },
+    {
+      "name": ".30-06 180gr BLR, 25 degrees downhill, 8 mph from 10 o'clock",
+      "load": {
+        "model": "G1",
+        "bc": 0.425,
+        "mv": 2650,
+        "weight": 180,
+        "sightHeight": 1.65,
+        "zeroRange": 100,
+        "length": 1.246,
+        "twist": 10,
+        "diameter": 0.308
+      },
+      "zeroEnv": {
+        "tempF": 60,
+        "pressure": 0,
+        "altFt": 6035,
+        "rh": 30
+      },
+      "env": {
+        "tempF": 30,
+        "pressure": 0,
+        "altFt": 9000,
+        "rh": 45,
+        "angle": -25,
+        "windMph": 8,
+        "windClock": 10
+      },
+      "ranges": [
+        200,
+        300,
+        400,
+        500,
+        600
+      ],
+      "expected": [
+        {
+          "r": 200,
+          "dropIn": -3.2057,
+          "windIn": 2.1888,
+          "v": 2341.2028,
+          "tof": 0.2409
+        },
+        {
+          "r": 300,
+          "dropIn": -12.7067,
+          "windIn": 5.0471,
+          "v": 2194.1417,
+          "tof": 0.3732
+        },
+        {
+          "r": 400,
+          "dropIn": -29.0236,
+          "windIn": 9.2427,
+          "v": 2051.8426,
+          "tof": 0.5146
+        },
+        {
+          "r": 500,
+          "dropIn": -53.1196,
+          "windIn": 14.9264,
+          "v": 1914.564,
+          "tof": 0.666
+        },
+        {
+          "r": 600,
+          "dropIn": -86.1309,
+          "windIn": 22.2699,
+          "v": 1782.7192,
+          "tof": 0.8284
+        }
+      ]
+    },
+    {
+      "name": ".30-06 180gr BLR, 1% humidity, 95F desert",
+      "load": {
+        "model": "G1",
+        "bc": 0.425,
+        "mv": 2650,
+        "weight": 180,
+        "sightHeight": 1.65,
+        "zeroRange": 100,
+        "length": 1.246,
+        "twist": 10,
+        "diameter": 0.308
+      },
+      "zeroEnv": {
+        "tempF": 60,
+        "pressure": 0,
+        "altFt": 6035,
+        "rh": 30
+      },
+      "env": {
+        "tempF": 95,
+        "pressure": 0,
+        "altFt": 3000,
+        "rh": 1,
+        "angle": 0,
+        "windMph": 0,
+        "windClock": 3
+      },
+      "ranges": [
+        200,
+        300,
+        400,
+        500,
+        600
+      ],
+      "expected": [
+        {
+          "r": 200,
+          "dropIn": -4.0674,
+          "windIn": 0.3874,
+          "v": 2299.15,
+          "tof": 0.2431
+        },
+        {
+          "r": 300,
+          "dropIn": -14.7151,
+          "windIn": 0.8712,
+          "v": 2133.9728,
+          "tof": 0.3785
+        },
+        {
+          "r": 400,
+          "dropIn": -33.0111,
+          "windIn": 1.5832,
+          "v": 1975.9437,
+          "tof": 0.5246
+        },
+        {
+          "r": 500,
+          "dropIn": -60.2287,
+          "windIn": 2.5628,
+          "v": 1825.6074,
+          "tof": 0.6826
+        },
+        {
+          "r": 600,
+          "dropIn": -97.8983,
+          "windIn": 3.8594,
+          "v": 1683.8565,
+          "tof": 0.8538
+        }
+      ]
     }
   ]
 }

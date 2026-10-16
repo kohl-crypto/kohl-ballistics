@@ -1,5 +1,5 @@
 // Kohl Ballistics offline cache (lance edition). VERSION changes with every build so phones pick up updates.
-const VERSION = "kohl-lance-20261016141947";
+const VERSION = "kohl-lance-20261016151810";
 const FILES = ["./", "./index.html", "./manifest.json", "icons/icon-192.png", "icons/icon-512.png", "icons/maskable-512.png", "icons/apple-touch-icon.png", "fonts/barlow-condensed-latin-500-normal.woff2", "fonts/barlow-condensed-latin-600-normal.woff2", "fonts/barlow-condensed-latin-700-normal.woff2", "fonts/jetbrains-mono-latin-400-normal.woff2", "fonts/jetbrains-mono-latin-600-normal.woff2", "fonts/source-sans-3-latin-400-normal.woff2", "fonts/source-sans-3-latin-600-normal.woff2", "fonts/source-sans-3-latin-700-normal.woff2"];
 // A new version takes over as soon as it has downloaded (no waiting for the app to be fully closed),
 // and an app already open on the old version reloads itself into the new one.
