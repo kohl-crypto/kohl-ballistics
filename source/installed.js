@@ -94,10 +94,25 @@
       reg.addEventListener("updatefound", () => {
         const w = reg.installing; if (!w) return;
         w.addEventListener("statechange", () => {
-          if (w.state === "installed" && navigator.serviceWorker.controller) { $("netBar").dataset.update = "Update downloaded. Close and reopen the app to use it."; refresh(); }
+          if (w.state === "installed" && navigator.serviceWorker.controller) { $("netBar").dataset.update = "Updating to the new version…"; refresh(); }
         });
       });
+      // A phone app that is switched back to doesn't reload, so look for updates on every return with signal.
+      let last = 0;
+      const look = () => { if (navigator.onLine && !document.hidden && Date.now() - last > 60000) { last = Date.now(); reg.update().catch(() => {}); } };
+      document.addEventListener("visibilitychange", look); addEventListener("online", look);
     }).catch(() => {});
+    // The new version takes over by itself; reload into it if the page wasn't already moved over.
+    const had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (had) setTimeout(() => location.reload(), 1500); });
+  }
+
+  // ---- Which version is this? ----
+  if (window.KB_VERSION) {
+    const v = window.KB_VERSION, d = new Date(Date.UTC(+v.slice(0, 4), +v.slice(4, 6) - 1, +v.slice(6, 8), +v.slice(8, 10), +v.slice(10, 12)));
+    const p = document.createElement("p"); p.className = "note"; p.id = "appVer"; p.style.textAlign = "center";
+    p.textContent = "App version: " + d.toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+    gear.append(p);
   }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 })();

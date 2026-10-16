@@ -237,7 +237,7 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
         <div class="callsub" id="callWindSub"></div>
       </div>
       <div class="alerts" id="alerts"></div>
-      <!-- Hold picture: shown here in Hold mode, under Details in Dial mode -->
+      <!-- Hold picture: always right with the answer, in Dial and Hold mode -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0" id="retBox">
         <svg class="reticle" id="reticle" viewBox="-170 -170 340 340" role="img" aria-label="Hold picture on a 1-MOA grid"></svg>
         <button class="chip" id="sunBtn" type="button" aria-pressed="false">High contrast</button>
@@ -1031,10 +1031,6 @@ function afterRender() {
   const w = $("callWind").innerHTML;
   $("hudCall").innerHTML = $("callElev").innerHTML + (w ? " · " + w : "");
   $("hudSub").textContent = `${S.range} yd · ${S.env.windMph ? `wind ${S.env.windMph} mph from your ${clockNames[S.env.windClock]} o'clock` : "no wind"}${S.env.angle ? ` · ${S.env.angle > 0 ? "+" : ""}${S.env.angle}°` : ""}`;
-  // Hold mode: the hold picture is the answer, so it sits with it. Dial mode: it's a detail.
-  const rb = $("retBox");
-  if (S.mode === "hold") { if (rb.parentNode !== $("solPanel")) $("solPanel").append(rb); }
-  else if (rb.parentNode !== $("morePanel")) $("morePanel").insertBefore(rb, $("zeroLine"));
   buzz($("callElev").textContent + "|" + $("callWind").textContent);
   hudShow();
 }
@@ -2095,7 +2091,7 @@ $("favBtn").onclick = () => { load().fav = load().fav === false; save(); render(
 ensureLoad(); buildLessons(); setQuizLabels();
 newQ();
 // Shoot: everything that isn't the answer or a control folds under Details.
-fold($("morePanel"), "more", "Details", () => [S.mode === "dial" ? "Hold picture for wind, energy, zero" : "Energy, bullet speed, zero", morePending ? `${morePending} note${morePending > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "));
+fold($("morePanel"), "more", "Details", () => ["Energy, bullet speed, zero", morePending ? `${morePending} note${morePending > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "));
 // Rifle & load: set-once sections fold to a one-line summary.
 fold($("loadPanel"), "load", "Load", () => `${load().name} · ${Number(load().mv).toLocaleString()} fps`);
 fold($("rifPanel"), "rifle", "Rifle & scope", () => [S.rifle.name, rifleCal(), sc().name || "scope not set"].filter(Boolean).join(" · "), setupFirst());

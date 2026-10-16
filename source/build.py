@@ -80,7 +80,7 @@ img{{max-width:100%}}
 [hidden]{{display:none!important}}
 .offbar{{font-size:.8rem;text-align:center;padding:4px 8px;background:var(--sunk);color:var(--muted)}}
 </style>
-<script>window.KB_EDITION = "{ed['key']}";
+<script>window.KB_EDITION = "{ed['key']}"; window.KB_VERSION = "{version}";
 try {{ var t = localStorage.getItem("kb-theme"); if (t && t !== "auto") document.documentElement.setAttribute("data-theme", t); }} catch (e) {{}}</script>
 <script>
 {connect}
@@ -106,9 +106,23 @@ try {{ var t = localStorage.getItem("kb-theme"); if (t && t !== "auto") document
     sw = f'''// Kohl Ballistics offline cache ({ed['key']} edition). VERSION changes with every build so phones pick up updates.
 const VERSION = "kohl-{ed['key']}-{version}";
 const FILES = {json.dumps(files)};
-self.addEventListener("install", e => {{ e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES))); }});
+// A new version takes over as soon as it has downloaded (no waiting for the app to be fully closed),
+// and an app already open on the old version reloads itself into the new one.
+self.addEventListener("install", e => {{
+  e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES.map(f => new Request(f, {{ cache: "reload" }})))).then(() => self.skipWaiting()));
+}});
 self.addEventListener("activate", e => {{
-  e.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(k => k !== VERSION && (k.startsWith("kohl-{ed['key']}-") || /^kohl-\\d/.test(k))).map(k => caches.delete(k)))).then(() => self.clients.claim()));
+  const done = (async () => {{
+    const old = (await caches.keys()).filter(k => k !== VERSION && (k.startsWith("kohl-{ed['key']}-") || /^kohl-\\d/.test(k)));
+    await Promise.all(old.map(k => caches.delete(k)));
+    await self.clients.claim();
+    return old.length > 0;
+  }})();
+  e.waitUntil(done);
+  // Reload open pages only after taking over: their reload is served by this worker, so it can't wait inside activate.
+  done.then(async upgraded => {{
+    if (upgraded) for (const c of await self.clients.matchAll({{ type: "window" }})) c.navigate(c.url).catch(() => {{}});
+  }});
 }});
 // Serve from the phone first so it works with no signal; refresh the stored copy in the background when online.
 // Only this app's own files are cached; calls to Claude go straight to the network.
@@ -116,7 +130,7 @@ self.addEventListener("fetch", e => {{
   if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
   e.respondWith(caches.open(VERSION).then(async c => {{
     const hit = await c.match(e.request, {{ ignoreSearch: true }});
-    const net = fetch(e.request).then(r => {{ if (r && r.ok) c.put(e.request, r.clone()); return r; }}).catch(() => null);
+    const net = fetch(e.request, {{ cache: "no-cache" }}).then(r => {{ if (r && r.ok) c.put(e.request, r.clone()); return r; }}).catch(() => null);
     return hit || (await net) || c.match("./index.html");
   }}));
 }});

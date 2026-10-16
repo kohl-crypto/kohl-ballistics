@@ -29,7 +29,7 @@ img{max-width:100%}
 [hidden]{display:none!important}
 .offbar{font-size:.8rem;text-align:center;padding:4px 8px;background:var(--sunk);color:var(--muted)}
 </style>
-<script>window.KB_EDITION = "friends";
+<script>window.KB_EDITION = "friends"; window.KB_VERSION = "20261016141947";
 try { var t = localStorage.getItem("kb-theme"); if (t && t !== "auto") document.documentElement.setAttribute("data-theme", t); } catch (e) {}</script>
 <script>
 // Kohl Ballistics installed app: talks to Claude directly with Lance's own API key.
@@ -384,7 +384,7 @@ input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-w
         <div class="callsub" id="callWindSub"></div>
       </div>
       <div class="alerts" id="alerts"></div>
-      <!-- Hold picture: shown here in Hold mode, under Details in Dial mode -->
+      <!-- Hold picture: always right with the answer, in Dial and Hold mode -->
       <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0" id="retBox">
         <svg class="reticle" id="reticle" viewBox="-170 -170 340 340" role="img" aria-label="Hold picture on a 1-MOA grid"></svg>
         <button class="chip" id="sunBtn" type="button" aria-pressed="false">High contrast</button>
@@ -1178,10 +1178,6 @@ function afterRender() {
   const w = $("callWind").innerHTML;
   $("hudCall").innerHTML = $("callElev").innerHTML + (w ? " · " + w : "");
   $("hudSub").textContent = `${S.range} yd · ${S.env.windMph ? `wind ${S.env.windMph} mph from your ${clockNames[S.env.windClock]} o'clock` : "no wind"}${S.env.angle ? ` · ${S.env.angle > 0 ? "+" : ""}${S.env.angle}°` : ""}`;
-  // Hold mode: the hold picture is the answer, so it sits with it. Dial mode: it's a detail.
-  const rb = $("retBox");
-  if (S.mode === "hold") { if (rb.parentNode !== $("solPanel")) $("solPanel").append(rb); }
-  else if (rb.parentNode !== $("morePanel")) $("morePanel").insertBefore(rb, $("zeroLine"));
   buzz($("callElev").textContent + "|" + $("callWind").textContent);
   hudShow();
 }
@@ -2242,7 +2238,7 @@ $("favBtn").onclick = () => { load().fav = load().fav === false; save(); render(
 ensureLoad(); buildLessons(); setQuizLabels();
 newQ();
 // Shoot: everything that isn't the answer or a control folds under Details.
-fold($("morePanel"), "more", "Details", () => [S.mode === "dial" ? "Hold picture for wind, energy, zero" : "Energy, bullet speed, zero", morePending ? `${morePending} note${morePending > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "));
+fold($("morePanel"), "more", "Details", () => ["Energy, bullet speed, zero", morePending ? `${morePending} note${morePending > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "));
 // Rifle & load: set-once sections fold to a one-line summary.
 fold($("loadPanel"), "load", "Load", () => `${load().name} · ${Number(load().mv).toLocaleString()} fps`);
 fold($("rifPanel"), "rifle", "Rifle & scope", () => [S.rifle.name, rifleCal(), sc().name || "scope not set"].filter(Boolean).join(" · "), setupFirst());
@@ -2352,10 +2348,25 @@ render();
       reg.addEventListener("updatefound", () => {
         const w = reg.installing; if (!w) return;
         w.addEventListener("statechange", () => {
-          if (w.state === "installed" && navigator.serviceWorker.controller) { $("netBar").dataset.update = "Update downloaded. Close and reopen the app to use it."; refresh(); }
+          if (w.state === "installed" && navigator.serviceWorker.controller) { $("netBar").dataset.update = "Updating to the new version…"; refresh(); }
         });
       });
+      // A phone app that is switched back to doesn't reload, so look for updates on every return with signal.
+      let last = 0;
+      const look = () => { if (navigator.onLine && !document.hidden && Date.now() - last > 60000) { last = Date.now(); reg.update().catch(() => {}); } };
+      document.addEventListener("visibilitychange", look); addEventListener("online", look);
     }).catch(() => {});
+    // The new version takes over by itself; reload into it if the page wasn't already moved over.
+    const had = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.addEventListener("controllerchange", () => { if (had) setTimeout(() => location.reload(), 1500); });
+  }
+
+  // ---- Which version is this? ----
+  if (window.KB_VERSION) {
+    const v = window.KB_VERSION, d = new Date(Date.UTC(+v.slice(0, 4), +v.slice(4, 6) - 1, +v.slice(6, 8), +v.slice(8, 10), +v.slice(10, 12)));
+    const p = document.createElement("p"); p.className = "note"; p.id = "appVer"; p.style.textAlign = "center";
+    p.textContent = "App version: " + d.toLocaleString([], { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+    gear.append(p);
   }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 })();
