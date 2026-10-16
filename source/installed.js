@@ -7,7 +7,7 @@
   const panel = document.createElement("div");
   panel.className = "panel"; panel.id = "onlinePanel";
   panel.innerHTML = `
-    <div class="row" style="justify-content:space-between"><h2>Online features</h2><span class="pill" id="olPill"></span></div>
+    <div class="row" style="justify-content:space-between"><h2 class="foldsrc">Online features</h2><span class="pill" id="olPill"></span></div>
     <p class="note" style="margin:0" id="olText"></p>
     <label class="field"><span class="lbl">Claude API key</span>
       <input type="password" id="olKey" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-..."></label>
@@ -26,6 +26,9 @@
   const gear = $("tab-gear");
   const backupPanel = $("bkSave") && $("bkSave").closest(".panel");
   if (backupPanel) gear.insertBefore(panel, backupPanel); else gear.append(panel);
+  if (window.kbFold) window.kbFold(panel, "online", "Online features", () => {
+    const has = !!S.getKey(); return has && navigator.onLine ? "On · Spotter and photo reading ready" : has ? "Key saved · waiting for signal" : "Add a Claude API key to turn on the Spotter";
+  });
 
   function refresh() {
     const has = !!S.getKey(), on = navigator.onLine, live = has && on;
@@ -45,6 +48,7 @@
     bar.hidden = on && !bar.dataset.update;
     if (bar.dataset.update) bar.textContent = bar.dataset.update;
     else if (!on) bar.textContent = "No signal. The calculator works; Spotter and photo reading return with signal.";
+    if (window.kbFoldSums) window.kbFoldSums();
   }
   $("olSave").onclick = () => {
     const k = $("olKey").value.trim();
@@ -76,12 +80,10 @@
   if (!standalone && !hintOff) {
     const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
     const box = document.createElement("div");
-    box.className = "panel"; box.id = "installHint";
-    box.innerHTML = `<div class="row" style="justify-content:space-between"><h2>Put it on your home screen</h2><button class="btn" id="ihClose" type="button">Got it</button></div>
-      <p class="note" style="margin:0">${ios
-        ? "In Safari, tap the Share button (the square with an arrow), then <b>Add to Home Screen</b>, then <b>Add</b>. Open it from the new icon and it works with no signal."
-        : "In Chrome, tap the ⋮ menu, then <b>Install app</b> (or <b>Add to Home screen</b>). Open it from the new icon and it works with no signal."}
-      Your rifles, loads and zero stay on this phone.</p>`;
+    box.className = "installbar"; box.id = "installHint";
+    box.innerHTML = `<p>${ios
+        ? "Install for no-signal use: <b>Share</b> → <b>Add to Home Screen</b>."
+        : "Install for no-signal use: <b>⋮</b> menu → <b>Install app</b>."}</p><button class="btn" id="ihClose" type="button">Got it</button>`;
     const shoot = $("tab-shoot"); shoot.insertBefore(box, shoot.firstChild);
     $("ihClose").onclick = () => { box.remove(); try { localStorage.setItem("kb-install-hint", "off"); } catch (e) {} };
   }

@@ -80,7 +80,8 @@ img{{max-width:100%}}
 [hidden]{{display:none!important}}
 .offbar{{font-size:.8rem;text-align:center;padding:4px 8px;background:var(--sunk);color:var(--muted)}}
 </style>
-<script>window.KB_EDITION = "{ed['key']}";</script>
+<script>window.KB_EDITION = "{ed['key']}";
+try {{ var t = localStorage.getItem("kb-theme"); if (t && t !== "auto") document.documentElement.setAttribute("data-theme", t); }} catch (e) {{}}</script>
 <script>
 {connect}
 </script>

@@ -128,13 +128,70 @@ details.lesson p{margin:.6em 0;max-width:65ch}
 .dial div{background:var(--sunk);border-radius:6px;padding:6px;text-align:center;font:.85rem var(--mono)}
 .dial b{display:block;font:700 1.05rem var(--display);color:var(--accent)}
 @media (prefers-reduced-motion:no-preference){.call .n{transition:color .2s}}
+/* ---- Phone-first: bottom tabs, answer bar, night modes, glove-size controls ---- */
+:root[data-theme="red"]{
+  --bg:#000000; --surface:#0B0201; --sunk:#160403; --ink:#E8341F; --muted:#A3281A; --line:#3D0C07;
+  --accent:#FF3B24; --accent-ink:#000000; --accent-soft:#2C0704;
+  --good:#B92A18; --warn:#D7351F; --bad:#FF5A40; --dot:#FF2A10; color-scheme:dark}
+.wrap{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+nav.tabs{position:fixed;top:auto;bottom:0;left:0;right:0;z-index:20;grid-template-columns:repeat(4,minmax(0,170px));justify-content:center;gap:0;
+  padding:2px max(6px,env(safe-area-inset-right,0px)) env(safe-area-inset-bottom,0px) max(6px,env(safe-area-inset-left,0px));border-bottom:0;border-top:1px solid var(--line);background:var(--surface)}
+nav.tabs button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-height:60px;font-size:.85rem;line-height:1.05;padding:6px 2px;border-radius:0}
+nav.tabs button svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+nav.tabs button[aria-selected="true"]{background:none;color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.hud{position:fixed;top:0;left:0;right:0;z-index:19;background:var(--surface);border-bottom:2px solid var(--accent);
+  padding:calc(6px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 7px max(16px,env(safe-area-inset-left,0px));
+  display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;transform:translateY(-110%);visibility:hidden}
+.hud.on{transform:none;visibility:visible}
+.hud:not(.on){pointer-events:none}
+html{scroll-padding-top:72px;scroll-padding-bottom:calc(80px + env(safe-area-inset-bottom,0px))}
+@media (prefers-reduced-motion:no-preference){.hud{transition:transform .18s,visibility .18s}}
+.hud b{font:700 1.25rem/1.1 var(--display);text-transform:uppercase;letter-spacing:.02em}
+.hud .n{color:var(--accent);font-variant-numeric:tabular-nums}
+#hudSub{font-size:.82rem;color:var(--muted)}
+.themebtn{min-width:5.6em}
+.q{width:28px;height:28px;font-size:.8rem;position:relative;flex:none}
+.q::after{content:"";position:absolute;inset:-8px}
+.chip{min-height:40px;padding:8px 14px}
+.btn,.stepper button{min-height:46px}
+.seg button{min-height:42px;padding:8px 16px}
+input[type=number],input[type=text],input[type=search],input[type=password],select{min-height:46px;font-size:16px}
+input[type=range]{height:34px}
+.steps4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.stepper.small{grid-template-columns:48px minmax(0,1fr) 48px}
+.stepper button{padding:10px 4px}
+input.bigin[type=number]{font:700 2.6rem/1 var(--display);text-align:center;background:none;border:0;border-bottom:2px dashed var(--line);border-radius:0;
+  color:var(--ink);padding:0 0 2px;width:4.2ch;min-height:0;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+input.bigin::-webkit-outer-spin-button,input.bigin::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.bigval{display:flex;align-items:baseline;justify-content:center;gap:2px}
+.windrow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:center}
+.clock{width:min(180px,44vw);height:auto;aspect-ratio:1}
+.pm{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pm .btn{font-size:1.4rem;padding:4px}
+.alerts{display:flex;flex-direction:column;gap:6px}
+.alerts:empty{display:none}
+.foldhd{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;width:100%;min-height:46px;background:none;border:0;padding:0;margin:0;text-align:left;color:var(--ink);cursor:pointer;font:inherit}
+.foldhd .ft{font:600 1.15rem/1.1 var(--display);text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.foldhd .fs{grid-column:1;font-size:.88rem;color:var(--ink);overflow-wrap:anywhere}
+.foldhd .fs:empty{display:none}
+.foldhd svg{grid-column:2;grid-row:1/span 2;width:22px;height:22px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+@media (prefers-reduced-motion:no-preference){.foldhd svg{transition:transform .15s}}
+.foldhd[aria-expanded="true"] svg{transform:rotate(180deg)}
+.panel.folded{gap:0}
+.panel.folded > :not(.foldhd){display:none!important}
+.panel.fold .foldsrc{display:none}
+.installbar{display:flex;align-items:center;gap:10px;font-size:.88rem;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:6px 6px 6px 12px}
+.installbar p{margin:0;flex:1;min-width:0}
+.installbar .btn{min-height:40px;padding:6px 12px}
 </style>
 
 <div class="wrap">
   <header class="top">
-    <div class="row" style="gap:10px"><h1>Kohl Ballistics</h1><button class="btn primary" id="spBtn" type="button" aria-expanded="false" aria-controls="spotter">Spotter</button></div>
+    <div class="row" style="gap:10px;justify-content:space-between;width:100%"><h1>Kohl Ballistics</h1>
+      <div class="row" style="gap:8px"><button class="btn primary" id="spBtn" type="button" aria-expanded="false" aria-controls="spotter">Spotter</button><button class="btn themebtn" id="themeBtn" type="button"></button></div></div>
     <span class="sub" id="hdrSub"></span>
   </header>
+  <div class="hud" id="hud" aria-hidden="true"><b id="hudCall"></b><span id="hudSub"></span></div>
   <section class="panel spot" id="spotter" hidden aria-label="Spotter">
     <div class="row" style="justify-content:space-between">
       <h2>Spotter</h2>
@@ -153,10 +210,10 @@ details.lesson p{margin:.6em 0;max-width:65ch}
     <span class="note" id="spNote">Tap the microphone on your keyboard to talk instead of typing. The spotter needs internet; the firing solution below works without it.</span>
   </section>
   <nav class="tabs" role="tablist">
-    <button role="tab" data-tab="shoot" aria-selected="true">Shoot</button>
-    <button role="tab" data-tab="card" aria-selected="false">Dope card</button>
-    <button role="tab" data-tab="gear" aria-selected="false">Rifle &amp; load</button>
-    <button role="tab" data-tab="learn" aria-selected="false">Learn</button>
+    <button role="tab" data-tab="shoot" aria-selected="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 2v5M12 17v5M2 12h5M17 12h5"/></svg>Shoot</button>
+    <button role="tab" data-tab="card" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M4 15h16M10 3v18"/></svg>Dope card</button>
+    <button role="tab" data-tab="gear" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 15l12-6h4l2 2v2l-6 1-8 4H5z"/><path d="M7 16l-1 4h3l1-5"/></svg>Rifle &amp; load</button>
+    <button role="tab" data-tab="learn" aria-selected="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5c3-1 6-1 8 1 2-2 5-2 8-1v14c-3-1-6-1-8 1-2-2-5-2-8-1z"/><path d="M12 6v14"/></svg>Learn</button>
   </nav>
 
   <!-- ============ SHOOT ============ -->
@@ -166,44 +223,42 @@ details.lesson p{margin:.6em 0;max-width:65ch}
       <p class="note" style="margin:0">Enter your rifle's caliber, your scope, and where you zeroed under Rifle &amp; load, then pick your ammo from the factory list. The numbers below are only right once that's done.</p>
       <div class="row" style="gap:8px"><button class="btn primary" id="setupGo" type="button">Set up rifle</button><button class="btn" id="setupDone" type="button">I've set it up</button></div>
     </div>
-    <div class="panel solution">
+    <div class="panel solution" id="solPanel">
       <div class="row" style="justify-content:space-between">
         <h2 id="solTitle">Firing solution</h2>
         <div class="seg" role="group" aria-label="Dial or hold">
           <button id="mDial" aria-pressed="true">Dial</button><button id="mHold" aria-pressed="false">Hold</button>
         </div>
       </div>
-      <div class="zline" id="zeroLine"></div>
-      <div class="sol-grid">
-        <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
-          <div class="call" id="callElev"></div>
-          <div class="callsub" id="callElevSub"></div>
-          <div class="call" id="callWind" style="font-size:1.6rem"></div>
-          <div class="callsub" id="callWindSub"></div>
-        </div>
-        <div style="display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0">
-          <svg class="reticle" id="reticle" viewBox="-170 -170 340 340" role="img" aria-label="Hold picture on a 1-MOA grid"></svg>
-          <button class="chip" id="sunBtn" type="button" aria-pressed="false">High contrast</button>
-        </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:0" id="callBox">
+        <div class="call" id="callElev"></div>
+        <div class="callsub" id="callElevSub"></div>
+        <div class="call" id="callWind" style="font-size:1.6rem"></div>
+        <div class="callsub" id="callWindSub"></div>
       </div>
-      <div class="row" id="magRow" hidden>
-        <span class="lbl">Magnification <button class="q" data-h="sfp" aria-expanded="false">?</button></span>
-        <input type="range" id="mag" min="3" max="15" step="1" aria-label="Magnification" style="flex:1;min-width:120px">
-        <b id="magVal" style="font-family:var(--mono)"></b>
+      <div class="alerts" id="alerts"></div>
+      <!-- Hold picture: shown here in Hold mode, under Details in Dial mode -->
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px;min-width:0" id="retBox">
+        <svg class="reticle" id="reticle" viewBox="-170 -170 340 340" role="img" aria-label="Hold picture on a 1-MOA grid"></svg>
+        <button class="chip" id="sunBtn" type="button" aria-pressed="false">High contrast</button>
+        <div class="row" id="magRow" hidden style="width:100%">
+          <span class="lbl">Magnification <button class="q" data-h="sfp" aria-expanded="false">?</button></span>
+          <input type="range" id="mag" min="3" max="15" step="1" aria-label="Magnification" style="flex:1;min-width:120px">
+          <b id="magVal" style="font-family:var(--mono)"></b>
+        </div>
+        <div class="help" data-for="sfp" hidden></div>
       </div>
-      <div class="help" data-for="sfp" hidden></div>
-      <div class="row" style="gap:8px"><span class="lbl">Animal</span><div class="chips" id="species" role="group" aria-label="Animal"></div></div>
-      <div class="stats" id="stats"></div>
-      <div class="flags" id="flags"></div>
     </div>
 
     <div class="panel">
       <span class="lbl">Range (yards) <button class="q" data-h="range" aria-expanded="false">?</button></span>
       <div class="help" data-for="range" hidden></div>
-      <div class="stepper">
-        <button id="rDown" aria-label="Minus 25 yards">−25</button>
-        <div class="bigval"><span id="rangeVal"></span><small>yd</small></div>
-        <button id="rUp" aria-label="Plus 25 yards">+25</button>
+      <label class="bigval"><input type="number" id="rangeIn" class="bigin" inputmode="numeric" enterkeyhint="done" min="25" max="1000" step="1" aria-label="Range in yards. Tap to type your rangefinder reading."><small>yd</small></label>
+      <div class="steps4">
+        <button class="btn" id="rDown" type="button" aria-label="Minus 25 yards">−25</button>
+        <button class="btn" id="rDown5" type="button" aria-label="Minus 5 yards">−5</button>
+        <button class="btn" id="rUp5" type="button" aria-label="Plus 5 yards">+5</button>
+        <button class="btn" id="rUp" type="button" aria-label="Plus 25 yards">+25</button>
       </div>
       <input type="range" id="range" min="25" max="1000" step="5" aria-label="Range">
     </div>
@@ -211,21 +266,37 @@ details.lesson p{margin:.6em 0;max-width:65ch}
     <div class="panel">
       <span class="lbl">Wind <button class="q" data-h="wind" aria-expanded="false">?</button></span>
       <div class="help" data-for="wind" hidden></div>
-      <div class="row" style="align-items:center;gap:16px">
+      <div class="windrow">
         <svg class="clock" id="clock" viewBox="-80 -80 160 160" role="group" aria-label="Wind direction clock"></svg>
-        <div style="flex:1;min-width:150px;display:flex;flex-direction:column;gap:6px">
-          <div class="bigval" style="text-align:left"><span id="windVal"></span><small>mph</small></div>
+        <div style="min-width:0;display:flex;flex-direction:column;gap:8px">
+          <div class="bigval"><span id="windVal"></span><small>mph</small></div>
+          <div class="pm">
+            <button class="btn" id="wDown" type="button" aria-label="1 mph less wind">−</button>
+            <button class="btn" id="wUp" type="button" aria-label="1 mph more wind">+</button>
+          </div>
           <input type="range" id="wind" min="0" max="30" step="1" aria-label="Wind speed">
-          <button class="btn" id="noWind" type="button" aria-pressed="false" style="align-self:flex-start">No wind</button>
-          <div class="note" id="windDesc"></div>
+          <button class="btn" id="noWind" type="button" aria-pressed="false">No wind</button>
         </div>
       </div>
+      <div class="note" id="windDesc"></div>
+    </div>
+
+    <div class="panel" id="morePanel">
+      <div class="zline" id="zeroLine"></div>
+      <div class="row" style="gap:8px"><span class="lbl">Animal</span><div class="chips" id="species" role="group" aria-label="Animal"></div></div>
+      <div class="stats" id="stats"></div>
+      <div class="flags" id="flags"></div>
     </div>
 
     <div class="panel">
       <span class="lbl">Shot angle <button class="q" data-h="angle" aria-expanded="false">?</button></span>
       <div class="help" data-for="angle" hidden></div>
-      <div class="row"><input type="range" id="angle" min="-35" max="35" step="1" style="flex:1" aria-label="Shot angle"><b id="angleVal" style="font-family:var(--mono);min-width:4.5em;text-align:right"></b></div>
+      <div class="stepper small">
+        <button id="aDown" type="button" aria-label="1 degree more downhill">−</button>
+        <b id="angleVal" class="bigval" style="font-size:2rem"></b>
+        <button id="aUp" type="button" aria-label="1 degree more uphill">+</button>
+      </div>
+      <input type="range" id="angle" min="-35" max="35" step="1" aria-label="Shot angle">
     </div>
 
     <div class="panel">
@@ -274,9 +345,9 @@ details.lesson p{margin:.6em 0;max-width:65ch}
 
   <!-- ============ GEAR ============ -->
   <section class="tab" id="tab-gear" hidden>
-    <div class="panel">
+    <div class="panel" id="loadPanel">
       <div class="row" style="justify-content:space-between">
-        <h2>Load</h2>
+        <h2 class="foldsrc">Load</h2>
         <div class="row" style="gap:6px">
           <button class="btn primary" id="addLoad" type="button">+ Add</button>
           <button class="btn" id="delLoad" type="button">Delete</button>
@@ -340,7 +411,7 @@ details.lesson p{margin:.6em 0;max-width:65ch}
     </div>
     <div class="panel" id="rifPanel">
       <div class="row" style="justify-content:space-between">
-        <h2>Rifle &amp; scope</h2>
+        <h2 class="foldsrc">Rifle &amp; scope</h2>
         <div class="row" style="gap:6px">
           <button class="btn primary" id="addRifle" type="button">+ Rifle</button>
           <button class="btn" id="delRifle" type="button">Delete</button>
@@ -380,8 +451,8 @@ details.lesson p{margin:.6em 0;max-width:65ch}
       </div>
       <p class="note" style="margin:0" id="scNote"></p>
     </div>
-    <div class="panel">
-      <h2>Where you zeroed</h2>
+    <div class="panel" id="zeroPanel">
+      <h2 class="foldsrc">Where you zeroed</h2>
       <p class="note" style="margin:0">Set these to match how you last sighted in. The solver re-creates that zero shot, then flies today's shot from it with whichever load you select.</p>
       <div class="grid2">
         <label class="field"><span class="lbl">Zero range yd <button class="q" data-h="zero" aria-expanded="false" type="button">?</button></span><input type="number" id="zeroRange" step="25" min="25" max="600"></label>
@@ -392,8 +463,8 @@ details.lesson p{margin:.6em 0;max-width:65ch}
       <div class="help" data-for="zero" hidden></div>
       <div class="row" style="gap:10px"><button class="btn" id="zSet" type="button" disabled>Set zero</button><span class="note" id="zNote"></span></div>
     </div>
-    <div class="panel">
-      <span class="lbl">True your velocity <button class="q" data-h="true" aria-expanded="false">?</button></span>
+    <div class="panel" id="truePanel">
+      <span class="lbl">How this works <button class="q" data-h="true" aria-expanded="false">?</button></span>
       <div class="help" data-for="true" hidden></div>
       <div class="grid2">
         <label class="field"><span class="lbl">Range shot yd</span><input type="number" id="tRange" value="400" step="25"></label>
@@ -401,12 +472,18 @@ details.lesson p{margin:.6em 0;max-width:65ch}
       </div>
       <div class="row"><button class="btn primary" id="tGo">Solve velocity</button><span id="tOut" class="note"></span></div>
     </div>
-    <div class="panel">
-      <h2>Start over</h2>
-      <button class="btn" id="resetAll" style="align-self:flex-start">Reset to defaults</button>
+    <div class="panel" id="screenPanel">
+      <span class="lbl">Screen</span>
+      <div class="seg" role="group" aria-label="Screen colors" id="themeSeg"><button type="button" data-th="auto">Auto</button><button type="button" data-th="light">Day</button><button type="button" data-th="dark">Dark</button><button type="button" data-th="red">Red</button></div>
+      <p class="note" style="margin:0">Red keeps your night vision at first and last light and is dim to the animals. Auto follows the phone's dark mode. The button at the top switches it too.</p>
+      <div class="row" style="gap:8px">
+        <button class="chip" id="wakeBtn" type="button" aria-pressed="false">Keep screen on while shooting</button>
+        <button class="chip" id="buzzBtn" type="button" aria-pressed="true">Buzz when the answer changes</button>
+      </div>
+      <span class="note" id="wakeNote"></span>
     </div>
-    <div class="panel">
-      <h2>Back up your loads</h2>
+    <div class="panel" id="backupPanel">
+      <h2 class="foldsrc">Back up your loads</h2>
       <p class="note" style="margin:0">Your loads, favorites, zero and offsets live on this device. A backup moves them to a new phone or between the online and offline versions.</p>
       <div class="row" style="gap:8px">
         <button class="btn" id="bkSave" type="button">Save backup file</button>
@@ -419,6 +496,10 @@ details.lesson p{margin:.6em 0;max-width:65ch}
         <button class="btn" id="bkPaste" type="button">Restore pasted backup</button>
       </details>
       <span class="note" id="bkNote"></span>
+    </div>
+    <div class="panel" id="resetPanel">
+      <h2 class="foldsrc">Start over</h2>
+      <button class="btn" id="resetAll" style="align-self:flex-start">Reset to defaults</button>
       <span class="note" id="resetNote"></span>
     </div>
   </section>
@@ -853,8 +934,111 @@ document.querySelectorAll("nav.tabs button").forEach(b => b.addEventListener("cl
   document.querySelectorAll("nav.tabs button").forEach(x => x.setAttribute("aria-selected", x === b));
   document.querySelectorAll("section.tab").forEach(s => s.hidden = s.id !== "tab-" + b.dataset.tab);
   if (b.dataset.tab === "learn" && typeof buildLessons === "function") { buildLessons(); setQuizLabels(); }
-  render();
+  render(); window.scrollTo({ top: 0 }); wake(); hudShow();
 }));
+
+// ---------- screen: colors, keep-awake, buzz ----------
+// Per-phone conveniences, so they live outside the synced rifle data.
+const pref = (k, d) => { try { return localStorage.getItem(k) || d; } catch (e) { return d; } };
+const setPref = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
+const THEMES = { auto: "Auto", light: "Day", dark: "Dark", red: "Red" };
+let theme = THEMES[pref("kb-theme", "auto")] ? pref("kb-theme", "auto") : "auto";
+let wakeOn = pref("kb-wake", "off") === "on", buzzOn = pref("kb-buzz", "on") === "on";
+function applyTheme() {
+  const r = document.documentElement;
+  if (theme === "auto") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", theme);
+  const m = document.querySelector('meta[name="theme-color"]');
+  if (m) m.setAttribute("content", getComputedStyle(r).getPropertyValue("--surface").trim() || "#0E1410");
+  $("themeBtn").textContent = THEMES[theme];
+  $("themeBtn").setAttribute("aria-label", `Screen colors: ${THEMES[theme]}. Tap to change.`);
+  document.querySelectorAll("#themeSeg button").forEach(b => b.setAttribute("aria-pressed", b.dataset.th === theme));
+}
+function setTheme(t) { theme = t; setPref("kb-theme", t); applyTheme(); render(); }
+$("themeBtn").onclick = () => { const k = Object.keys(THEMES); setTheme(k[(k.indexOf(theme) + 1) % k.length]); };
+document.querySelectorAll("#themeSeg button").forEach(b => b.onclick = () => setTheme(b.dataset.th));
+if (window.matchMedia) { try { matchMedia("(prefers-color-scheme: dark)").addEventListener("change", applyTheme); } catch (e) {} }
+applyTheme();
+
+let wl = null;
+async function wake() {
+  const want = wakeOn && !document.hidden && !$("tab-shoot").hidden;
+  if (want && !wl && navigator.wakeLock) {
+    try { wl = await navigator.wakeLock.request("screen"); wl.addEventListener("release", () => { wl = null; }); } catch (e) { wl = null; }
+  } else if (!want && wl) { const w = wl; wl = null; try { await w.release(); } catch (e) {} }
+}
+document.addEventListener("visibilitychange", wake);
+function screenPrefs() {
+  $("wakeBtn").setAttribute("aria-pressed", wakeOn); $("buzzBtn").setAttribute("aria-pressed", buzzOn);
+  $("wakeNote").textContent = wakeOn && !navigator.wakeLock ? "This browser can't keep the screen on. Set a longer screen timeout in the phone's display settings instead." : wakeOn ? "The screen stays on while the Shoot tab is open. It goes back to normal on other tabs." : "";
+}
+$("wakeBtn").onclick = () => { wakeOn = !wakeOn; setPref("kb-wake", wakeOn ? "on" : "off"); screenPrefs(); wake(); foldSums(); };
+$("buzzBtn").onclick = () => { buzzOn = !buzzOn; setPref("kb-buzz", buzzOn ? "on" : "off"); screenPrefs(); foldSums(); };
+screenPrefs();
+// A short tick when the answer changes, so you can feel it update without looking (Android; iPhones don't allow it).
+let lastSig = null, lastBuzz = 0;
+function buzz(sig) {
+  if (lastSig !== null && sig !== lastSig && buzzOn && navigator.vibrate && !$("tab-shoot").hidden && Date.now() - lastBuzz > 80) {
+    try { navigator.vibrate(12); } catch (e) {} lastBuzz = Date.now();
+  }
+  lastSig = sig;
+}
+
+// ---------- answer bar: stays at the top once the firing solution scrolls away ----------
+let callSeen = true;
+function hudShow() {
+  const on = !callSeen && !$("tab-shoot").hidden && $("callElev").getBoundingClientRect().bottom < 0;
+  $("hud").classList.toggle("on", on);
+}
+if ("IntersectionObserver" in window) new IntersectionObserver(es => { callSeen = es[es.length - 1].isIntersecting; hudShow(); }).observe($("callElev"));
+
+// ---------- fold-away sections ----------
+let OPEN = {}; try { OPEN = JSON.parse(pref("kb-open", "{}")) || {}; } catch (e) { OPEN = {}; }
+const FOLDS = {};
+function fold(panel, id, title, sumFn, dflt) {
+  if (!panel || FOLDS[id]) return;
+  const hd = document.createElement("button");
+  hd.type = "button"; hd.className = "foldhd"; hd.id = "fold-" + id;
+  hd.innerHTML = '<span class="ft"></span><span class="fs"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  hd.querySelector(".ft").textContent = title;
+  panel.classList.add("fold"); panel.prepend(hd);
+  const set = (o, remember) => {
+    panel.classList.toggle("folded", !o); hd.setAttribute("aria-expanded", o);
+    if (remember) { OPEN[id] = o; setPref("kb-open", JSON.stringify(OPEN)); }
+  };
+  hd.onclick = () => { set(panel.classList.contains("folded"), true); if (id === "more") render(); };
+  set(id in OPEN ? OPEN[id] : !!dflt, false);
+  FOLDS[id] = { hd, sumFn, set };
+  foldSums();
+}
+function openFold(id) { if (FOLDS[id]) FOLDS[id].set(true, true); }
+function foldSums() {
+  Object.values(FOLDS).forEach(f => { if (f.sumFn) { let t = ""; try { t = f.sumFn() || ""; } catch (e) {} f.hd.querySelector(".fs").textContent = t; } });
+}
+window.kbFold = fold; window.kbFoldSums = () => foldSums();
+let morePending = 0;
+const setupFirst = () => EDITION === "friends" && !!S.needsSetup;
+
+// Number pads: decimal keypad where a minus sign is never needed; the full number keyboard where it is.
+const SIGNED = new Set(["tempF", "zTemp", "altFt", "zAlt", "poiUp", "poiRight"]);
+document.querySelectorAll('input[type=number]').forEach(el => {
+  if (!el.hasAttribute("inputmode") && !SIGNED.has(el.id)) el.setAttribute("inputmode", "decimal");
+  if (!el.hasAttribute("enterkeyhint")) el.setAttribute("enterkeyhint", "done");
+  el.addEventListener("keydown", e => { if (e.key === "Enter") el.blur(); });
+});
+
+function afterRender() {
+  foldSums();
+  const w = $("callWind").innerHTML;
+  $("hudCall").innerHTML = $("callElev").innerHTML + (w ? " · " + w : "");
+  $("hudSub").textContent = `${S.range} yd · ${S.env.windMph ? `wind ${S.env.windMph} mph from your ${clockNames[S.env.windClock]} o'clock` : "no wind"}${S.env.angle ? ` · ${S.env.angle > 0 ? "+" : ""}${S.env.angle}°` : ""}`;
+  // Hold mode: the hold picture is the answer, so it sits with it. Dial mode: it's a detail.
+  const rb = $("retBox");
+  if (S.mode === "hold") { if (rb.parentNode !== $("solPanel")) $("solPanel").append(rb); }
+  else if (rb.parentNode !== $("morePanel")) $("morePanel").insertBefore(rb, $("zeroLine"));
+  buzz($("callElev").textContent + "|" + $("callWind").textContent);
+  hudShow();
+}
+
 function goTab(t) { document.querySelector(`nav.tabs button[data-tab="${t}"]`).click(); window.scrollTo({ top: 0 }); }
 
 // ---------- help bubbles ----------
@@ -916,8 +1100,20 @@ const poiInput = (id, key) => $(id).addEventListener("input", () => {
 poiInput("poiUp", "poiUp"); poiInput("poiRight", "poiRight");
 $("poiClear").onclick = () => { delete load().poiUp; delete load().poiRight; $("poiUp").value = ""; $("poiRight").value = ""; save(); render(); };
 $("model").addEventListener("change", e => { load().model = e.target.value; save(); render(); });
-$("rDown").onclick = () => { S.range = Math.max(25, S.range - 25); save(); render(); };
-$("rUp").onclick = () => { S.range = Math.min(1000, S.range + 25); save(); render(); };
+// Big +/- buttons for gloves; the range number itself opens the keypad for a rangefinder reading.
+const stepBtn = (id, fn) => { $(id).onclick = () => { fn(); save(); render(); }; };
+stepBtn("rDown", () => S.range = clampN(S.range - 25, 25, 1000)); stepBtn("rUp", () => S.range = clampN(S.range + 25, 25, 1000));
+stepBtn("rDown5", () => S.range = clampN(S.range - 5, 25, 1000)); stepBtn("rUp5", () => S.range = clampN(S.range + 5, 25, 1000));
+stepBtn("wDown", () => S.env.windMph = clampN(S.env.windMph - 1, 0, 40)); stepBtn("wUp", () => S.env.windMph = clampN(S.env.windMph + 1, 0, 40));
+stepBtn("aDown", () => S.env.angle = clampN(S.env.angle - 1, -45, 45)); stepBtn("aUp", () => S.env.angle = clampN(S.env.angle + 1, -45, 45));
+{
+  const rIn = $("rangeIn"); rIn._get = () => S.range;
+  const typed = () => Math.round(parseFloat(rIn.value));
+  rIn.addEventListener("focus", () => { try { rIn.select(); } catch (e) {} });
+  rIn.addEventListener("input", () => { const v = typed(); if (v >= 25 && v <= 1000) { S.range = v; save(); render(true); } });
+  rIn.addEventListener("change", () => { const v = typed(); if (isFinite(v)) { S.range = clampN(v, 25, 1000); save(); } rIn.value = S.range; render(true); });
+  rIn.addEventListener("keydown", e => { if (e.key === "Enter") rIn.blur(); });
+}
 $("sunBtn").onclick = () => { S.sun = !S.sun; save(); render(); };
 $("noWind").onclick = () => { S.env.windMph = 0; save(); render(); };
 $("mDial").onclick = () => { S.mode = "dial"; save(); render(); };
@@ -1118,7 +1314,7 @@ function renderRifle() {
   $("scNote").textContent = `${SC.click} ${U} clicks: one click moves impact ${fmt(SC.click * unitIn(100), 2)}" at 100 yd. ` +
     (SC.plane === "FFP" ? "First focal plane: reticle marks are true at any power." : `Second focal plane: reticle marks are true at ${SC.trueMag}x.`);
 }
-$("setupGo").onclick = () => { goTab("gear"); };
+$("setupGo").onclick = () => { goTab("gear"); openFold("rifle"); $("rifPanel").scrollIntoView({ block: "start" }); };
 $("setupDone").onclick = () => { S.needsSetup = false; save(); render(); };
 // ---------- backup / restore ----------
 const bkText = () => JSON.stringify({ app: "Kohl Ballistics", saved: new Date().toISOString(), state: S });
@@ -1167,14 +1363,14 @@ $("presets").querySelectorAll(".chip").forEach(c => c.onclick = () => {
 
 // wind clock
 function drawClock() {
-  let s = `<circle r="66" fill="var(--sunk)" stroke="var(--line)"/>`;
+  let s = `<circle r="71" fill="var(--sunk)" stroke="var(--line)"/>`;
   s += `<path d="M0 10 L-7 22 L7 22 Z" fill="var(--muted)"/><text y="38" text-anchor="middle" font-size="9" fill="var(--muted)">you</text>`;
-  s += `<line x1="0" y1="0" x2="0" y2="-40" stroke="var(--line)" stroke-dasharray="3 3"/><text y="-44" text-anchor="middle" font-size="8" fill="var(--muted)">target</text>`;
+  s += `<line x1="0" y1="0" x2="0" y2="-24" stroke="var(--line)" stroke-dasharray="3 3"/><text y="-28" text-anchor="middle" font-size="8" fill="var(--muted)">target</text>`;
   for (let i = 0; i < 12; i++) {
     const a = i * Math.PI / 6, x = 56 * Math.sin(a), y = -56 * Math.cos(a), on = i === S.env.windClock;
     s += `<g class="ck" data-i="${i}" style="cursor:pointer" tabindex="0" role="button" aria-label="Wind from ${clockNames[i]} o'clock" aria-pressed="${on}">
-      <circle cx="${x}" cy="${y}" r="11" fill="${on ? "var(--accent)" : "var(--surface)"}" stroke="var(--line)"/>
-      <text x="${x}" y="${y + 4}" text-anchor="middle" font-size="11" font-weight="600" fill="${on ? "var(--accent-ink)" : "var(--ink)"}">${clockNames[i]}</text></g>`;
+      <circle cx="${x}" cy="${y}" r="13" fill="${on ? "var(--accent)" : "var(--surface)"}" stroke="var(--line)"/>
+      <text x="${x}" y="${y + 4.5}" text-anchor="middle" font-size="12.5" font-weight="600" fill="${on ? "var(--accent-ink)" : "var(--ink)"}">${clockNames[i]}</text></g>`;
   }
   const a = S.env.windClock * Math.PI / 6;
   if (S.env.windMph > 0) {
@@ -1197,7 +1393,7 @@ function drawReticle(elevU, windU, showHold) {
   const k = isMoa ? 5 : 5 * 3.43775, minor = isMoa ? 1 : 0.5, major = isMoa ? 2 : 1, wMax = isMoa ? 18 : 8, eMax = isMoa ? 29 : 8;
   const crossStep = isMoa ? 2 : 1, skip = isMoa ? [2, 6] : [1];
   const mag = S.mode === "hold" ? S.mag : SC.trueMag, px = m => m * k, near = (a, b) => Math.abs(a - b) < 1e-6;
-  const sun = !!S.sun, bg = sun ? "#FFFFFF" : "var(--sunk)", ink = sun ? "#000000" : "var(--ink)",
+  const sun = !!S.sun && theme !== "red", bg = sun ? "#FFFFFF" : "var(--sunk)", ink = sun ? "#000000" : "var(--ink)",
         lab = sun ? "#000000" : "var(--muted)", hot = sun ? "#D10000" : "var(--accent)", w = sun ? 1.6 : 1;
   let s = `<circle r="160" fill="${bg}" stroke="${ink}" stroke-width="${sun ? 3 : 2}"/>`;
   // small crosses at each corner below the wind line
@@ -1233,7 +1429,8 @@ function drawReticle(elevU, windU, showHold) {
 
 // ---------- render ----------
 let lastSol;
-function render(fromInput) {
+function render(fromInput) { renderCore(fromInput); afterRender(); }
+function renderCore(fromInput) {
   ensureLoad();
   {
     const SC = sc();
@@ -1246,7 +1443,6 @@ function render(fromInput) {
   const act = document.activeElement;
   document.querySelectorAll("input[type=number],input[type=range]").forEach(el => { if (el._get && el !== act) { const v = el._get(); el.value = v === 0 && el.id === "pressure" ? "" : v; } });
   $("model").value = load().model;
-  $("rangeVal").textContent = S.range;
   $("windVal").textContent = S.env.windMph;
   $("angleVal").textContent = (S.env.angle > 0 ? "+" : "") + S.env.angle + "°";
   $("magVal").textContent = S.mag + "x";
@@ -1258,7 +1454,7 @@ function render(fromInput) {
   }
   $("setupBanner").hidden = !S.needsSetup;
   renderRifle();
-  $("sunBtn").setAttribute("aria-pressed", !!S.sun);
+  $("sunBtn").setAttribute("aria-pressed", !!S.sun); $("sunBtn").hidden = theme === "red";
   if (!SPECIES[S.species]) S.species = "elk";
   $("species").innerHTML = Object.entries(SPECIES).map(([k, v]) => `<button class="chip" type="button" data-sp="${k}" aria-pressed="${k === S.species}">${v.name}</button>`).join("");
   $("species").querySelectorAll(".chip").forEach(c => c.onclick = () => { S.species = c.dataset.sp; save(); render(); });
@@ -1291,14 +1487,14 @@ function render(fromInput) {
 
   const cr = S.env.windClock, full = Math.abs(Math.sin(cr * Math.PI / 6));
   $("windDesc").textContent = S.env.windMph === 0 ? "No wind." :
-    `From ${clockNames[cr]} o'clock · ${full > 0.95 ? "full value" : full > 0.6 ? "about " + Math.round(full * 100) + "% value" : full > 0.1 ? "about half value" : "head/tail wind, almost no drift"}`;
+    `From your ${clockNames[cr]} o'clock · ${full > 0.95 ? "full value" : full > 0.6 ? "about " + Math.round(full * 100) + "% value" : full > 0.1 ? "about half value" : "head/tail wind, almost no drift"}`;
 
   const at = BAL.atmo(S.env), at0 = BAL.atmo({ altFt: 0, tempF: 59, rh: 0, pressure: 29.92 });
   $("airNote").textContent = `Air density ${Math.round(at.rho / at0.rho * 100)}% of sea level · pressure ≈ ${fmt(at.PinHg, 2)} inHg · speed of sound ${Math.round(at.sos / 0.3048)} fps`;
 
   const sol = solveAt([S.range])[0]; lastSol = sol;
   const L = load();
-  if (!sol) { $("callElev").textContent = "Out of range"; return; }
+  if (!sol) { $("callElev").textContent = "Out of range"; $("callElevSub").textContent = ""; $("callWind").textContent = ""; $("callWindSub").textContent = ""; $("alerts").innerHTML = ""; return; }
   const SC = sc(), U = SC.unit, cv = SC.click, uDec = U === "MOA" ? 1 : 2;
   const eU = -ang(sol, "e"), wU = -ang(sol, "w"); // + = up, + = right, in the scope's units
   const markF = SC.plane === "FFP" ? 1 : SC.trueMag / S.mag; // reticle marks per unit at this power
@@ -1349,7 +1545,11 @@ function render(fromInput) {
       : ["warn", "Zero offset", `Scope is zeroed with the ${zn}. This includes the physics difference, but not your rifle's own shift with this load. Shoot it at ${zr} yd and enter where it hits in Rifle & load.`]);
   }
   if (S.env.windMph >= 12 && S.range >= 300) fl.push(["warn", "Wind", `A 3 mph misread here moves impact about ${fmt(Math.abs(sol.windIn) * 3 / S.env.windMph, 1)}". Close the distance if you can.`]);
-  $("flags").innerHTML = fl.map(([c, t, d]) => `<div class="flag"><span class="pill ${c}">${t}</span><span>${d}</span></div>`).join("");
+  const flagHtml = f => f.map(([c, t, d]) => `<div class="flag"><span class="pill ${c}">${t}</span><span>${d}</span></div>`).join("");
+  $("flags").innerHTML = flagHtml(fl);
+  // Shot-stoppers stay next to the answer; the rest live under Details.
+  $("alerts").innerHTML = flagHtml(fl.filter(f => f[0] === "bad"));
+  morePending = fl.filter(f => f[0] === "warn").length;
 
   // Zero line: what the rifle is zeroed with, and how this load relates to it.
   {
@@ -1894,6 +2094,16 @@ $("favBtn").onclick = () => { load().fav = load().fav === false; save(); render(
 
 ensureLoad(); buildLessons(); setQuizLabels();
 newQ();
+// Shoot: everything that isn't the answer or a control folds under Details.
+fold($("morePanel"), "more", "Details", () => [S.mode === "dial" ? "Hold picture for wind, energy, zero" : "Energy, bullet speed, zero", morePending ? `${morePending} note${morePending > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · "));
+// Rifle & load: set-once sections fold to a one-line summary.
+fold($("loadPanel"), "load", "Load", () => `${load().name} · ${Number(load().mv).toLocaleString()} fps`);
+fold($("rifPanel"), "rifle", "Rifle & scope", () => [S.rifle.name, rifleCal(), sc().name || "scope not set"].filter(Boolean).join(" · "), setupFirst());
+fold($("zeroPanel"), "zero", "Where you zeroed", () => { const zl = S.loads[S.zeroLoad]; return `${S.rifle.zeroRange} yd with ${zl ? zl.name : load().name}`; });
+fold($("truePanel"), "true", "True your velocity", () => "Fix velocity from a real shot at distance");
+fold($("screenPanel"), "screen", "Screen", () => [THEMES[theme] + " colors", wakeOn ? "stays on while shooting" : "", buzzOn ? "buzz on" : ""].filter(Boolean).join(" · "));
+fold($("backupPanel"), "backup", "Back up your loads", () => "Save or restore rifles, loads and zero");
+fold($("resetPanel"), "reset", "Start over", () => "Reset loads and zero to the defaults");
 render();
 })();
 </script>

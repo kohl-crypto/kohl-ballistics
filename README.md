@@ -19,6 +19,14 @@ maker's own page or manual) and fill in with one tap, with no signal needed. Any
 with Claude. Turret units (MOA or MIL), click value, focal plane and power come from the scope, and every hold,
 click and dope card number follows the scope on the selected rifle.
 
+Built for one hand in the field:
+- Tabs sit at the bottom.
+- Once you scroll, the answer stays pinned at the top.
+- The range opens a number pad for your rangefinder reading.
+- Red night mode keeps your night vision.
+- An optional setting keeps the screen on while shooting.
+- Setup sections fold away to one-line summaries.
+
 ## What's here
 - `index.html`, `sw.js`, `manifest.json`, `icons/`, `fonts/`: Lance's edition (GitHub Pages serves these).
 - `friends/`: the friends' edition (shares `icons/` and `fonts/`).
